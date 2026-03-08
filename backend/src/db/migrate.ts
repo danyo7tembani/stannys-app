@@ -1,11 +1,8 @@
 import pg from "pg";
 import { readFileSync, readdirSync } from "fs";
 import path from "path";
-import { fileURLToPath } from "url";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-const MIGRATIONS_DIR = path.resolve(__dirname, "../../migrations");
+const MIGRATIONS_DIR = path.resolve(process.cwd(), "migrations");
 
 /**
  * Exécute les migrations SQL dans l'ordre (par nom de fichier).

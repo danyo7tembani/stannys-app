@@ -1,7 +1,6 @@
 import { Router, Request, Response } from "express";
 import type { BlocMurDeStyle, BlocMurDeStyleInsert, BlocMurDeStyleUpdate } from "../services/mur-de-style/types.js";
 import type { CatalogueBlocksStore } from "../services/catalogue/blocks-store.js";
-import type { CatalogueBlocksStore } from "../services/catalogue/blocks-store.js";
 import { isCatalogueSection } from "../services/catalogue/types.js";
 
 function generateId(): string {

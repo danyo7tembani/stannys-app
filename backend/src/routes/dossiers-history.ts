@@ -47,7 +47,7 @@ export function createDossiersHistoryRouter(
       return res.status(400).json({ error: "Données invalides (contact1 requis)" });
     }
     try {
-      const payload = {
+      const payload: Omit<DossierEnregistre, "id" | "createdAt"> = {
         nom: body.nom,
         prenom: body.prenom,
         contact: body.contact ?? contact1,

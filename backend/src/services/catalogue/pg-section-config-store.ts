@@ -4,7 +4,7 @@ import type { CatalogueSectionConfig } from "./section-config-store.js";
 
 export function createCatalogueSectionConfigStorePg(pool: Pool) {
   async function readConfig(): Promise<CatalogueSectionConfig> {
-    const { rows } = await pool.query(
+    const { rows } = await pool.query<{ section: string; subtitle: string | null }>(
       "SELECT section, subtitle FROM catalogue_section_config"
     );
     const config = Object.fromEntries(
