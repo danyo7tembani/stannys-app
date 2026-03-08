@@ -8,8 +8,15 @@ export function getPlaceholderUrlForVetement(vetement: Vetement, index: number):
   return `https://picsum.photos/seed/${seed}/800/1000`;
 }
 
-export function getPlaceholderUrlForImage(img: ImageVetement, vetementId: string): string {
-  const seed = vetementId.charCodeAt(0) + img.order;
+/** Accepte ImageVetement ou un objet minimal { id, url } (ex. ThumbButton). */
+export function getPlaceholderUrlForImage(
+  img: ImageVetement | { id: string; url: string; order?: number } | null | undefined,
+  vetementId: string
+): string {
+  const order = img && "order" in img && typeof (img as ImageVetement).order === "number"
+    ? (img as ImageVetement).order
+    : 0;
+  const seed = vetementId.charCodeAt(0) + order;
   return `https://picsum.photos/seed/${seed}/1200/1400`;
 }
 
