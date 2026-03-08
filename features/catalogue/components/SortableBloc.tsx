@@ -37,7 +37,10 @@ export function SortableBloc({ section, bloc, onEdit, onDelete }: SortableBlocPr
         bloc={bloc}
         onEdit={onEdit}
         onDelete={onDelete}
-        dragHandleProps={{ attributes, listeners }}
+        dragHandleProps={{
+          attributes: attributes as Record<string, unknown>,
+          listeners: listeners as Record<string, unknown>,
+        }}
       />
     </div>
   );
