@@ -1,0 +1,22 @@
+"use client";
+
+import { useState, useEffect } from "react";
+
+/**
+ * Retourne true si la media query correspond (ex: min-width: 768px pour md).
+ * Utilisé pour adapter la grille ViewerHD (3 colonnes à droite sur tablette/PC).
+ */
+export function useMediaQuery(query: string): boolean {
+  const [matches, setMatches] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const m = window.matchMedia(query);
+    setMatches(m.matches);
+    const handler = (e: MediaQueryListEvent) => setMatches(e.matches);
+    m.addEventListener("change", handler);
+    return () => m.removeEventListener("change", handler);
+  }, [query]);
+
+  return matches;
+}

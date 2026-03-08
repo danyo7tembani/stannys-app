@@ -1,0 +1,82 @@
+[
+  {
+    "id": "bloc-1771768047775-9didcp85h",
+    "titre": "Costumes",
+    "sousTitre": "Smoking",
+    "imagesSlider": [
+      "/temp/1.WEBP",
+      "/temp/2.WEBP",
+      "/temp/3.WEBP"
+    ],
+    "imageGaucheUrl": "/temp/4.WEBP",
+    "texteLong": "Smoking",
+    "texteCourt": "Costumes",
+    "slug": "Costume de soirée",
+    "ordre": 1,
+    "createdAt": "2026-02-22T13:47:27.776Z",
+    "updatedAt": "2026-02-22T13:47:27.776Z"
+  },
+  {
+    "id": "bloc-1771769875843-qmgz5ef1b",
+    "titre": "Costumes",
+    "sousTitre": "Choisissez un modèle pour l'explorer en haute définition sous tous les angles.",
+    "imagesSlider": [
+      "/temp/1.WEBP",
+      "/temp/2.WEBP",
+      "/temp/3.WEBP"
+    ],
+    "imageGaucheUrl": "/temp/4.WEBP",
+    "texteLong": "Smoking",
+    "texteCourt": "Costumes",
+    "slug": "Costume de soirée",
+    "ordre": 2,
+    "createdAt": "2026-02-22T14:17:55.843Z",
+    "updatedAt": "2026-02-22T14:17:55.843Z"
+  },
+  {
+    "id": "bloc-1771770962775-es8x1sxcm",
+    "titre": "Dany",
+    "sousTitre": "Choisissez un modèle pour l'explorer en haute définition sous tous les angles.",
+    "imagesSlider": [
+      "/temp/1.WEBP",
+      "/temp/2.WEBP",
+      "/temp/3.WEBP"
+    ],
+    "imageGaucheUrl": "/temp/4.WEBP",
+    "texteLong": "Smokingsss",
+    "texteCourt": "dfbngn",
+    "slug": "gffgnfgn",
+    "ordre": 3,
+    "createdAt": "2026-02-22T14:36:02.775Z",
+    "updatedAt": "2026-02-22T14:36:02.775Z"
+  },
+  {
+    "id": "bloc-1771773239393-532tgj8hs",
+    "titre": "Costumes",
+    "sousTitre": "Choisissez un modèle pour l'explorer en haute définition sous tous les angles.",
+    "imagesSlider": [
+      "/uploads/mur-de-style/1771773238964-yms7w8a6-01.jpg",
+      "/uploads/mur-de-style/1771773238969-egs18bn6-1.webp",
+      "/uploads/mur-de-style/1771773238975-pnq4v7ig-02.jpg",
+      "/uploads/mur-de-style/1771773238981-nyh579vm-3.webp",
+      "/uploads/mur-de-style/1771773238985-75ag4i5l-04.jpg",
+      "/uploads/mur-de-style/1771773238989-hcxcg7z4-4.webp",
+      "/uploads/mur-de-style/1771773238992-vnpg9urf-05.jpg",
+      "/uploads/mur-de-style/1771773238996-geue1g9n-5.webp",
+      "/uploads/mur-de-style/1771773238999-02bmb8t2-06.jpg",
+      "/uploads/mur-de-style/1771773239002-7ins30am-6.webp",
+      "/uploads/mur-de-style/1771773239005-dcca0g4t-07.jpg",
+      "/uploads/mur-de-style/1771773239009-5dlogd1l-7.webp",
+      "/uploads/mur-de-style/1771773239012-ntgrcfwc-08.jpg",
+      "/uploads/mur-de-style/1771773239017-k6d0jk88-8.webp",
+      "/uploads/mur-de-style/1771773239021-1qnb7fw3-09.jpg"
+    ],
+    "imageGaucheUrl": "/uploads/mur-de-style/1771773239064-qroaa10o-011.jpg",
+    "texteLong": "Smoking",
+    "texteCourt": "Costume",
+    "slug": "Costume de soirée",
+    "ordre": 4,
+    "createdAt": "2026-02-22T15:13:59.393Z",
+    "updatedAt": "2026-02-22T15:13:59.393Z"
+  }
+]

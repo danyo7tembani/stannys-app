@@ -1,0 +1,43 @@
+{
+  "name": "stannys-tailor-connect",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "dev:front": "next dev",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:all": "concurrently -n backend,front \"npm run dev:backend\" \"npm run dev:front\"",
+    "dev:tablet": "next dev -H 0.0.0.0",
+    "tablet-url": "node scripts/tablet-url.js",
+    "clean": "rimraf .next node_modules",
+    "clean:install": "npm run clean && npm install",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@dnd-kit/core": "^6.1.0",
+    "@dnd-kit/sortable": "^8.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
+    "next": "^14.2.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "fabric": "^5.3.0",
+    "@supabase/supabase-js": "^2.45.0",
+    "zustand": "^4.5.0",
+    "clsx": "^2.1.0"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "rimraf": "^5.0.5",
+    "@types/node": "^20.11.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "typescript": "^5.3.0",
+    "tailwindcss": "^3.4.0",
+    "postcss": "^8.4.0",
+    "autoprefixer": "^10.4.0",
+    "eslint": "^8.56.0",
+    "eslint-config-next": "^14.2.0"
+  }
+}

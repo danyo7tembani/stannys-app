@@ -1,0 +1,84 @@
+/**
+ * Bouton « Se connecter » — style Néon doré Stanny's (luxe).
+ * Bordure, glow au survol, dégradé de balayage et pulse au clic en or.
+ */
+
+/* Couleur dorée luxe (alignée sur la marque) */
+.auth-neon-button {
+  --auth-neon-gold: #c9a227;
+  --auth-neon-gold-rgb: 201, 162, 39;
+  --auth-neon-glow: rgba(var(--auth-neon-gold-rgb), 0.5);
+
+  position: relative;
+  padding: 12px 24px;
+  font-family: var(--font-playfair), Georgia, serif;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #fff;
+  background: transparent;
+  border: 2px solid var(--auth-neon-gold);
+  border-radius: 8px;
+  cursor: pointer;
+  overflow: hidden;
+  outline: none;
+  transition: border-color 0.4s ease, box-shadow 0.4s ease, transform 0.4s ease;
+  z-index: 1;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  text-align: center;
+}
+
+.auth-neon-button:hover {
+  box-shadow:
+    0 0 12px var(--auth-neon-glow),
+    0 0 24px rgba(var(--auth-neon-gold-rgb), 0.35),
+    0 0 48px rgba(var(--auth-neon-gold-rgb), 0.2);
+  transform: scale(1.04);
+}
+
+/* Balayage doré au survol */
+.auth-neon-button::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(var(--auth-neon-gold-rgb), 0.35),
+    transparent
+  );
+  transition: left 0.8s ease;
+  z-index: -1;
+}
+
+.auth-neon-button:hover::before {
+  left: 100%;
+}
+
+/* Feedback clic — pulsation dorée (déclenchée par classe en React) */
+.auth-neon-button__pulse {
+  position: absolute;
+  inset: 0;
+  background: rgba(var(--auth-neon-gold-rgb), 0.2);
+  opacity: 0;
+  pointer-events: none;
+  border-radius: 8px;
+}
+
+.auth-neon-button__pulse--active {
+  animation: auth-neon-pulse 0.5s ease-out forwards;
+}
+
+@keyframes auth-neon-pulse {
+  0% {
+    opacity: 0.6;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.2);
+  }
+}
