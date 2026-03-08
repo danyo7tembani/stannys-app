@@ -1,4 +1,4 @@
-import type { AuthRole } from "../store/auth-store";
+import type { AuthRole } from "./store/auth-store";
 
 /**
  * Retourne true si le rôle peut modifier le catalogue (blocs, sous-titres, réordonnancement).
