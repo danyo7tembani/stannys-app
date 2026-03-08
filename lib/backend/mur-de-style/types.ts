@@ -23,7 +23,8 @@ export interface BlocMurDeStyle {
   updatedAt?: string;
 }
 
-export type BlocMurDeStyleInsert = Omit<BlocMurDeStyle, "id" | "createdAt" | "updatedAt"> &
-  Partial<Pick<BlocMurDeStyle, "ordre">>;
+export type BlocMurDeStyleInsert = Omit<BlocMurDeStyle, "id" | "createdAt" | "updatedAt" | "ordre"> & {
+  ordre?: number;
+};
 
 export type BlocMurDeStyleUpdate = Partial<Omit<BlocMurDeStyle, "id" | "createdAt">>;
