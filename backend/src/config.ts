@@ -18,4 +18,8 @@ export const config = {
     .split(",")
     .map((s) => s.trim())
     .filter(Boolean),
+  /** Cloudinary (optionnel) : migration et upload futur. Si définis, les uploads peuvent être envoyés vers Cloudinary. */
+  CLOUDINARY_CLOUD_NAME: getEnv("CLOUDINARY_CLOUD_NAME", ""),
+  CLOUDINARY_API_KEY: getEnv("CLOUDINARY_API_KEY", ""),
+  CLOUDINARY_API_SECRET: getEnv("CLOUDINARY_API_SECRET", ""),
 } as const;

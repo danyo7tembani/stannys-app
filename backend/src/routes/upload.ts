@@ -24,7 +24,15 @@ router.post(
       if (f?.file?.length) files.push(...f.file);
       if (f?.files?.length) files.push(...f.files);
 
-      const result = await handleUpload(files, config.UPLOAD_DIR);
+      const cloudinaryConfig =
+        config.CLOUDINARY_CLOUD_NAME && config.CLOUDINARY_API_KEY && config.CLOUDINARY_API_SECRET
+          ? {
+              cloudName: config.CLOUDINARY_CLOUD_NAME,
+              apiKey: config.CLOUDINARY_API_KEY,
+              apiSecret: config.CLOUDINARY_API_SECRET,
+            }
+          : null;
+      const result = await handleUpload(files, config.UPLOAD_DIR, cloudinaryConfig);
       if ("error" in result) {
         return res.status(result.status).json({ error: result.error });
       }

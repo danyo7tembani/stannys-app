@@ -25,7 +25,7 @@ const OMBRE_EXT_ORANGE = "0px 0px 80px rgba(255, 102, 0, 0.06)";
 const OMBRE_EXTérieure = `${OMBRE_EXT_OR}, ${OMBRE_EXT_ORANGE}`;
 const GOLD_1PX = "rgba(212, 175, 55, 0.55)";
 const OMBRE_FINE_CADRE = "0 2px 8px rgba(0,0,0,0.25), 0 1px 2px rgba(0,0,0,0.15)";
-const TUNNEL_OVERLAY_COLOR = "#4472C4";
+const TUNNEL_OVERLAY_COLOR = "#FFFFFF00";
 const TUNNEL_OVERLAY_WIDTH = 320;
 const BANDE_OR_BORDURE = "#A38B5E";
 const BANDE_OR_WIDTH = 48;
@@ -268,7 +268,6 @@ export function MurDeStyleBloc({ section, bloc, onEdit, onDelete, dragHandleProp
             ref={ribbonRef}
             className="flex shrink-0 gap-[3px] select-none"
             style={{
-              transform: "translate3d(0, 0, 0)",
               willChange: "transform",
               backfaceVisibility: "hidden",
               contain: "layout style paint",
@@ -290,7 +289,6 @@ export function MurDeStyleBloc({ section, bloc, onEdit, onDelete, dragHandleProp
                   height: BLOCK_HEIGHT,
                   backgroundColor: FRAME_BROWN,
                   border: `1px solid ${FRAME_BROWN}`,
-                  boxShadow: OMBRE_FINE_CADRE,
                 }}
                 onMouseEnter={() => setHoveredSlideIndex(i)}
                 onMouseLeave={() => setHoveredSlideIndex(null)}

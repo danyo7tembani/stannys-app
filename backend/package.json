@@ -7,9 +7,11 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "tsx watch src/index.ts",
-    "db:migrate-data": "tsx scripts/migrate-json-to-pg.ts"
+    "db:migrate-data": "tsx scripts/migrate-json-to-pg.ts",
+    "migrate:cloudinary": "tsx scripts/migrate-to-cloudinary.ts"
   },
   "dependencies": {
+    "cloudinary": "^2.5.1",
     "dotenv": "^16.4.5",
     "express": "^4.21.0",
     "multer": "^1.4.5-lts.1",

@@ -1,6 +1,7 @@
 "use client";
 
 import { Input, Select } from "@/shared/ui";
+import { isValidEmail } from "@/shared/utils/email";
 import { useDossierForm } from "../hooks";
 import { COUNTRY_PHONE_CODES, DEFAULT_COUNTRY_CODE } from "../constants/country-codes";
 
@@ -13,8 +14,8 @@ export function FormulaireDossier() {
   const { dossier, handleChange, setDossier } = useDossierForm();
   const mailValue = dossier.mail ?? "";
   const mailError =
-    mailValue.trim() && !mailValue.includes("@")
-      ? "L'adresse e-mail doit contenir @"
+    mailValue.trim() && !isValidEmail(mailValue)
+      ? "Indiquez une adresse e-mail valide avec un nom de domaine (ex. nom@gmail.com)"
       : undefined;
 
   return (

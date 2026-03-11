@@ -1,3 +1,4 @@
+import { isValidEmail } from "@/shared/utils/email";
 import type { DossierClient } from "../types";
 import {
   MESURES_HAUT_DU_CORPS,
@@ -15,12 +16,12 @@ export function saveDossierDraft(_data: Partial<DossierClient>): Promise<void> {
 
 /**
  * Validation des infos personnelles : nom, prénom, contact1, adresse obligatoires.
- * contact2 facultatif. mail si renseigné doit contenir @.
+ * contact2 facultatif. mail si renseigné doit être une adresse valide (domaine avec extension).
  * Les photos sont facultatives.
  */
 export function isDossierStepValid(data: Partial<DossierClient>): boolean {
   const hasContact1 = (data.contact1 ?? data.contact ?? "").trim().length > 0;
-  const mailOk = !(data.mail ?? "").trim() || (data.mail ?? "").includes("@");
+  const mailOk = isValidEmail(data.mail);
   return Boolean(
     data.nom?.trim() &&
       data.prenom?.trim() &&
@@ -40,9 +41,12 @@ function countFilledInGroup(
 }
 
 /**
- * Validation des mesures : au moins 3 mesures remplies par groupe (Haut, Bras, Bas).
+ * Validation des mesures : au moins 3 mesures par groupe (Haut, Bras, Bas)
+ * et choix du modèle obligatoire (image de base OR). Chaussures et accessoires restent facultatifs.
  */
 export function isMesuresStepValid(data: Partial<DossierClient>): boolean {
+  const hasChoixModele = Boolean(data.imageBaseOr);
+  if (!hasChoixModele) return false;
   const mesures = data.mesures;
   const haut = countFilledInGroup(mesures, MESURES_HAUT_DU_CORPS);
   const bras = countFilledInGroup(mesures, MESURES_BRAS);

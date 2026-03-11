@@ -420,7 +420,9 @@ export function MesuresPageContent() {
           </Button>
         ) : (
           <p className="self-center text-sm text-luxe-blanc-muted">
-            Renseignez au moins {MIN_MESURES_PAR_GROUPE} mesures par section.
+            {!hasChoixModele
+              ? "Sélectionnez un modèle (Choix de modèle) pour pouvoir enregistrer."
+              : `Renseignez au moins ${MIN_MESURES_PAR_GROUPE} mesures par section.`}
           </p>
         )}
       </div>

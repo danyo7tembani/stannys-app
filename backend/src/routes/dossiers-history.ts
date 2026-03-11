@@ -2,6 +2,13 @@ import { Router, Request, Response } from "express";
 import type { DossiersHistoryRepository } from "../services/dossiers-history/repository.js";
 import type { DossierEnregistre } from "../services/dossiers-history/types.js";
 
+/** Mail facultatif ; si renseigné, doit être une adresse valide avec domaine (ex. nom@gmail.com). */
+function isValidEmail(value: string | undefined | null): boolean {
+  const trimmed = (value ?? "").trim();
+  if (trimmed === "") return true;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed);
+}
+
 export function createDossiersHistoryRouter(
   repo: DossiersHistoryRepository
 ): Router {
@@ -46,6 +53,18 @@ export function createDossiersHistoryRouter(
     if (!contact1) {
       return res.status(400).json({ error: "Données invalides (contact1 requis)" });
     }
+    const mailTrimmed = body.mail?.toString().trim();
+    if (mailTrimmed && !isValidEmail(mailTrimmed)) {
+      return res.status(400).json({
+        error: "Adresse e-mail invalide. Indiquez une adresse avec un nom de domaine (ex. nom@gmail.com).",
+      });
+    }
+    const hasChoixModele = Boolean(body.imageBaseOr ?? body.vetementBaseId);
+    if (!hasChoixModele) {
+      return res.status(400).json({
+        error: "Le choix du modèle (image de base) est obligatoire pour enregistrer un dossier.",
+      });
+    }
     try {
       const payload: Omit<DossierEnregistre, "id" | "createdAt"> = {
         nom: body.nom,
@@ -55,7 +74,7 @@ export function createDossiersHistoryRouter(
         contact2: body.contact2?.toString().trim() || undefined,
         contact1Prefix: body.contact1Prefix ?? "+242",
         contact2Prefix: body.contact2Prefix ?? "+242",
-        mail: body.mail?.toString().trim() || undefined,
+        mail: mailTrimmed || undefined,
         dateDepot: body.dateDepot ?? undefined,
         dateLivraison: body.dateLivraison?.toString().trim() || undefined,
         adresse: body.adresse,
