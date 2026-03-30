@@ -60,26 +60,44 @@ async function main(): Promise<void> {
 
   cloudinary.config({ cloud_name: cloudName, api_key: apiKey, api_secret: apiSecret });
 
-  const blocsPath = path.join(dataDir, "mur-de-style-blocs.json");
-  let blocs: BlocMurDeStyle[];
-  try {
-    const raw = await readFile(blocsPath, "utf-8");
-    blocs = JSON.parse(raw) as BlocMurDeStyle[];
-    if (!Array.isArray(blocs)) {
-      throw new Error("Le fichier ne contient pas un tableau de blocs.");
+  const blocFiles = [
+    { file: "mur-de-style-blocs.json", label: "vestes (mur-de-style)" },
+    { file: "catalogue-chaussures-blocs.json", label: "chaussures" },
+    { file: "catalogue-accessoires-blocs.json", label: "accessoires" },
+  ];
+
+  // Charge plusieurs fichiers JSON (vestes/chaussures/accessoires) car certains
+  // contiennent encore des URLs du type /uploads/mur-de-style/...
+  const fileToBlocs = new Map<string, BlocMurDeStyle[]>();
+  for (const { file, label } of blocFiles) {
+    const blocsPath = path.join(dataDir, file);
+    try {
+      const raw = await readFile(blocsPath, "utf-8");
+      const parsed = JSON.parse(raw) as BlocMurDeStyle[];
+      if (!Array.isArray(parsed)) {
+        throw new Error("Le fichier ne contient pas un tableau de blocs.");
+      }
+      fileToBlocs.set(blocsPath, parsed);
+      console.log(`[${label}] JSON chargé (${parsed.length} blocs).`);
+    } catch (err) {
+      console.warn(`[${label}] Impossible de lire le fichier ${file}. Ignore.`, err);
     }
-  } catch (err) {
-    console.error("Impossible de lire les blocs:", err);
+  }
+
+  if (fileToBlocs.size === 0) {
+    console.error("Aucun fichier JSON de blocs n'a pu être chargé. Abandon.");
     process.exit(1);
   }
 
   const allUploadUrls = new Set<string>();
-  for (const bloc of blocs) {
-    for (const url of bloc.imagesSlider ?? []) {
-      if (url.startsWith(MUR_DE_STYLE_PREFIX)) allUploadUrls.add(url);
-    }
-    if ((bloc.imageGaucheUrl ?? "").startsWith(MUR_DE_STYLE_PREFIX)) {
-      allUploadUrls.add(bloc.imageGaucheUrl!);
+  for (const blocs of fileToBlocs.values()) {
+    for (const bloc of blocs) {
+      for (const url of bloc.imagesSlider ?? []) {
+        if (url.startsWith(MUR_DE_STYLE_PREFIX)) allUploadUrls.add(url);
+      }
+      if ((bloc.imageGaucheUrl ?? "").startsWith(MUR_DE_STYLE_PREFIX)) {
+        allUploadUrls.add(bloc.imageGaucheUrl!);
+      }
     }
   }
 
@@ -107,31 +125,34 @@ async function main(): Promise<void> {
     }
   }
 
-  let replaceCount = 0;
-  for (const bloc of blocs) {
-    if (bloc.imagesSlider) {
-      bloc.imagesSlider = bloc.imagesSlider.map((url) => {
-        const newUrl = urlToCloudinary.get(url);
-        if (newUrl) {
-          replaceCount++;
-          return newUrl;
-        }
-        return url;
-      });
+  let replaceCountTotal = 0;
+  for (const [blocsPath, blocs] of fileToBlocs.entries()) {
+    let replaceCount = 0;
+    for (const bloc of blocs) {
+      if (bloc.imagesSlider) {
+        bloc.imagesSlider = bloc.imagesSlider.map((url) => {
+          const newUrl = urlToCloudinary.get(url);
+          if (newUrl) {
+            replaceCount++;
+            return newUrl;
+          }
+          return url;
+        });
+      }
+      if (bloc.imageGaucheUrl && urlToCloudinary.has(bloc.imageGaucheUrl)) {
+        bloc.imageGaucheUrl = urlToCloudinary.get(bloc.imageGaucheUrl)!;
+        replaceCount++;
+      }
     }
-    if (bloc.imageGaucheUrl && urlToCloudinary.has(bloc.imageGaucheUrl)) {
-      bloc.imageGaucheUrl = urlToCloudinary.get(bloc.imageGaucheUrl)!;
-      replaceCount++;
-    }
+
+    await writeFile(blocsPath, JSON.stringify(blocs, null, 2), "utf-8");
+    replaceCountTotal += replaceCount;
+    console.log(
+      `Migration terminée pour ${path.basename(blocsPath)}. Remplacements: ${replaceCount}.`
+    );
   }
 
-  await writeFile(blocsPath, JSON.stringify(blocs, null, 2), "utf-8");
-  console.log(
-    "\nMigration terminée. Remplacements:",
-    replaceCount,
-    "URL(s). Fichier sauvegardé:",
-    blocsPath
-  );
+  console.log(`\nMigration globale terminée. Total Remplacements: ${replaceCountTotal}.`);
 }
 
 main().catch((err) => {

@@ -62,15 +62,16 @@ export async function handleUpload(
     };
   }
 
-  const useCloudinary =
+  const hasCloudinaryConfig =
     cloudinaryConfig &&
     cloudinaryConfig.cloudName &&
     cloudinaryConfig.apiKey &&
     cloudinaryConfig.apiSecret;
+  const requireCloudinary = process.env.NODE_ENV === "production";
 
   const urls: string[] = [];
 
-  if (useCloudinary) {
+  if (hasCloudinaryConfig) {
     for (const file of toProcess) {
       if (file.size > MAX_FILE_SIZE) {
         return {
@@ -92,6 +93,15 @@ export async function handleUpload(
       }
     }
     return { urls };
+  }
+
+  // En prod (Render), on évite volontairement le fallback disque :
+  // Render n'a pas de disque persistant fiable pour servir les uploads.
+  if (requireCloudinary) {
+    return {
+      error: "Cloudinary requis en production (config CLOUDINARY_* manquante ou invalide).",
+      status: 500,
+    };
   }
 
   const dir = path.join(uploadDir, MUR_DE_STYLE_SUBDIR);
