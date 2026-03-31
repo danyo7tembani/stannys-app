@@ -26,6 +26,7 @@ import { MurDeStyleBloc } from "./MurDeStyleBloc";
 import { SortableBloc } from "./SortableBloc";
 
 const PREVIEW_REVOKE_DELAY_MS = 4000;
+const CATALOGUE_CACHE_KEY = (s: string) => `stannys_catalogue_${s}`;
 
 function revokePreviewUrls(urls: string[] | null) {
   if (!urls?.length) return;
@@ -59,6 +60,8 @@ export function MurDeStyle({ section, vetements }: MurDeStyleProps) {
   const [editingBloc, setEditingBloc] = useState<BlocMurDeStyle | null>(null);
   const [orderedList, setOrderedList] = useState<BlocMurDeStyle[]>([]);
   const [listError, setListError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [isListLoading, setIsListLoading] = useState(false);
   const [globalSubtitle, setGlobalSubtitle] = useState<string | null>(null);
   const revokeTimeoutsRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
@@ -74,14 +77,39 @@ export function MurDeStyle({ section, vetements }: MurDeStyleProps) {
   );
 
   const fetchBlocs = () => {
+    setIsListLoading(true);
+    setLoadError(null);
+    const cacheKey = CATALOGUE_CACHE_KEY(section);
     fetch(apiUrl(`catalogue/${section}/blocks`))
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error("fetch blocs failed");
+        return r.json();
+      })
       .then((data) => {
         const arr = Array.isArray(data) ? data : [];
         setBlocs(arr);
+        try {
+          localStorage.setItem(cacheKey, JSON.stringify(arr));
+        } catch (_) {}
         setOptimisticBloc((prev) => (prev && arr.some((b) => b.id === prev.id) ? null : prev));
       })
-      .catch(() => setBlocs([]));
+      .catch(() => {
+        try {
+          const raw = localStorage.getItem(cacheKey);
+          if (raw) {
+            const arr = JSON.parse(raw) as BlocMurDeStyle[];
+            if (Array.isArray(arr)) setBlocs(arr);
+            else setBlocs([]);
+            setLoadError("Connexion instable. Données locales affichées.");
+            return;
+          }
+        } catch (_) {}
+        setBlocs([]);
+        setLoadError("Impossible de charger les sections. Vérifiez la connexion puis réessayez.");
+      })
+      .finally(() => {
+        setIsListLoading(false);
+      });
   };
 
   const fetchConfig = () => {
@@ -95,6 +123,14 @@ export function MurDeStyle({ section, vetements }: MurDeStyleProps) {
   };
 
   useEffect(() => {
+    const key = CATALOGUE_CACHE_KEY(section);
+    try {
+      const raw = typeof localStorage !== "undefined" ? localStorage.getItem(key) : null;
+      if (raw) {
+        const arr = JSON.parse(raw) as BlocMurDeStyle[];
+        if (Array.isArray(arr)) setBlocs(arr);
+      }
+    } catch (_) {}
     fetchBlocs();
     fetchConfig();
     const onUpdate = (e: Event) => {
@@ -229,6 +265,7 @@ export function MurDeStyle({ section, vetements }: MurDeStyleProps) {
 
   const role = useAuthStore((s) => s.role);
   const canEdit = canEditCatalogue(role);
+  const showSkeleton = isListLoading && list.length === 0;
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)] w-full flex-col items-center justify-center py-4">
@@ -242,12 +279,35 @@ export function MurDeStyle({ section, vetements }: MurDeStyleProps) {
         subtitle={globalSubtitle}
         onUpdated={fetchConfig}
       />
+      {loadError && (
+        <div className="mb-3 flex flex-wrap items-center justify-center gap-2">
+          <p className="text-center text-sm text-amber-300" role="alert">
+            {loadError}
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              fetchBlocs();
+              fetchConfig();
+            }}
+            className="rounded-sm border border-luxe-or/50 bg-luxe-or/10 px-3 py-1.5 text-xs font-medium text-luxe-or transition-colors hover:bg-luxe-or/20"
+          >
+            Réessayer
+          </button>
+        </div>
+      )}
       {listError && (
         <p className="mb-3 text-center text-sm text-red-400" role="alert">
           {listError}
         </p>
       )}
-      {list.length === 0 ? (
+      {showSkeleton ? (
+        <div className="w-full max-w-5xl space-y-3 px-4">
+          <div className="h-28 animate-pulse rounded-lg border border-luxe-or-muted/20 bg-luxe-noir-soft/40" />
+          <div className="h-28 animate-pulse rounded-lg border border-luxe-or-muted/20 bg-luxe-noir-soft/40" />
+          <div className="h-28 animate-pulse rounded-lg border border-luxe-or-muted/20 bg-luxe-noir-soft/40" />
+        </div>
+      ) : list.length === 0 ? (
         <p className="text-center text-luxe-blanc-muted">
           {canEdit
             ? "Aucune section pour l'instant. Cliquez sur « Ajouter » pour créer une section avec vos images."
