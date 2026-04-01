@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 import { ROUTES } from "@/shared/constants";
-import { Button, Input } from "@/shared/ui";
+import { Button, Input, showErrorToast, showSuccessToast } from "@/shared/ui";
 import { getImageUrl } from "@/shared/api/client";
 import { useDossierStore, useDossiersHistoryStore } from "../store";
 import { isMesuresStepValid } from "../services";
@@ -33,8 +33,6 @@ export function MesuresPageContent() {
   const clearSelection = useDossierStore((s) => s.clearSelection);
   const reset = useDossierStore((s) => s.reset);
   const addDossierToHistory = useDossiersHistoryStore((s) => s.addDossier);
-  const [justSaved, setJustSaved] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
   const mesures = dossier.mesures ?? {};
   const canValidate = isMesuresStepValid(dossier);
   const hasChoixModele = Boolean(dossier.imageBaseOr);
@@ -92,6 +90,7 @@ export function MesuresPageContent() {
         bleu[index] = shapes;
         setDossier({ annotations: { ...prev, bleu } });
       }
+      showSuccessToast("Annotations enregistrées.");
     },
     [dossier.annotations, setDossier]
   );
@@ -261,7 +260,7 @@ export function MesuresPageContent() {
                   value={mesures[m.id] != null ? String(mesures[m.id]) : ""}
                   onChange={(e) => handleMesureChange(m.id, e.target.value)}
                   placeholder="—"
-                  className="w-full"
+                  className="w-full font-dossier-nombres"
                 />
               ))}
             </div>
@@ -390,29 +389,18 @@ export function MesuresPageContent() {
       </section>
 
       <div className="mt-12 flex flex-wrap justify-end gap-4">
-        {justSaved && (
-          <p className="w-full text-center text-sm text-luxe-or sm:w-auto">
-            Dossier enregistré.{" "}
-            <Link href={ROUTES.PARAMETRES_HISTORIQUE} className="underline">
-              Voir l’historique
-            </Link>
-          </p>
-        )}
-        {saveError && (
-          <p className="text-sm text-red-400">{saveError}</p>
-        )}
         {canValidate ? (
           <Button
             variant="primary"
             onClick={async () => {
-              setSaveError(null);
               try {
                 await addDossierToHistory(dossier);
                 reset();
-                setJustSaved(true);
-                setTimeout(() => setJustSaved(false), 5000);
+                showSuccessToast("Dossier enregistré.");
               } catch (e) {
-                setSaveError(e instanceof Error ? e.message : "Erreur lors de l'enregistrement");
+                showErrorToast(
+                  e instanceof Error ? e.message : "Erreur lors de l'enregistrement"
+                );
               }
             }}
           >

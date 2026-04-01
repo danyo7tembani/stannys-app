@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useRouter, usePathname } from "next/navigation";
-import { Button, Input } from "@/shared/ui";
+import { Button, Input, showErrorToast, showSuccessToast } from "@/shared/ui";
 import { apiUrl } from "@/shared/api/client";
 import { slugify } from "@/shared/utils/slugify";
 import { isCatalogueSection } from "@/shared/constants";
@@ -42,8 +42,6 @@ export function AddBlockButton() {
   const panelInputRef = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState(false);
   const [sending, setSending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [form, setForm] = useState<BlocMurDeStyleInsert>({
     titre: "",
     sousTitre: "",
@@ -60,7 +58,6 @@ export function AddBlockButton() {
 
   const update = (key: keyof BlocMurDeStyleInsert, value: string | string[] | number) => {
     setForm((prev) => ({ ...prev, [key]: value }));
-    setError(null);
   };
 
   useEffect(() => {
@@ -91,7 +88,6 @@ export function AddBlockButton() {
   const onSlideImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files?.length) return;
-    setError(null);
     const list = Array.from(files).slice(0, MAX_SLIDER_IMAGES - slidePreviewUrls.length);
     const newUrls = list.map((f) => URL.createObjectURL(f));
     setSlidePreviewUrls((prev) => {
@@ -105,7 +101,6 @@ export function AddBlockButton() {
   const onPanelImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files?.length) return;
-    setError(null);
     const newUrl = URL.createObjectURL(files[0]);
     setPanelPreviewUrl((prev) => {
       if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
@@ -135,9 +130,8 @@ export function AddBlockButton() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
     if (!form.titre?.trim()) {
-      setError("Le titre est requis.");
+      showErrorToast("Le titre est requis.");
       return;
     }
     const filesFromInput = slideInputRef.current?.files
@@ -145,13 +139,13 @@ export function AddBlockButton() {
       : [];
     const filesToUploadSlide = slideFiles.length ? slideFiles : filesFromInput;
     if (!filesToUploadSlide.length) {
-      setError(
+      showErrorToast(
         "Sélectionnez au moins une image pour le slide (bouton « Ouvrir (sélection multiple) » en haut du formulaire), puis validez avec Ouvrir dans la fenêtre."
       );
       return;
     }
     if (filesToUploadSlide.length < MIN_SLIDER_IMAGES) {
-      setError(
+      showErrorToast(
         `Le slide doit contenir au moins ${MIN_SLIDER_IMAGES} images (actuellement ${filesToUploadSlide.length}).`
       );
       return;
@@ -162,7 +156,7 @@ export function AddBlockButton() {
       const imagesSlider =
         uploadSlide && Array.isArray(uploadSlide) ? uploadSlide : [];
       if (!imagesSlider.length) {
-        setError("L’upload des images du slide a échoué.");
+        showErrorToast("L’upload des images du slide a échoué.");
         setSending(false);
         return;
       }
@@ -194,11 +188,9 @@ export function AddBlockButton() {
       const createdBloc = await res.json();
       const previewSlider = [...slidePreviewUrls];
       const previewPanel = panelPreviewUrl;
-      setError(null);
-      setSuccessMessage("Section créée.");
+      showSuccessToast("Section créée.");
       setTimeout(() => {
         setOpen(false);
-        setSuccessMessage(null);
         setSlideFiles([]);
         setSlidePreviewUrls([]);
         setPanelFile(null);
@@ -225,9 +217,9 @@ export function AddBlockButton() {
           })
         );
         router.refresh();
-      }, 1200);
+      }, 400);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erreur inconnue");
+      showErrorToast(err instanceof Error ? err.message : "Erreur inconnue");
     } finally {
       setSending(false);
     }
@@ -235,8 +227,6 @@ export function AddBlockButton() {
 
   const handleClose = () => {
     if (sending) return;
-    setSuccessMessage(null);
-    setError(null);
     resetFormAndRevoke();
     setOpen(false);
   };
@@ -368,16 +358,6 @@ export function AddBlockButton() {
                 onChange={(e) => update("texteCourt", e.target.value)}
                 placeholder="Costume"
               />
-              {successMessage && (
-                <p className="text-sm text-emerald-400" role="status">
-                  {successMessage}
-                </p>
-              )}
-              {error && (
-                <p className="text-sm text-red-400" role="alert">
-                  {error}
-                </p>
-              )}
               <div className="flex gap-3 pt-2">
                 <Button type="button" variant="ghost" onClick={handleClose} disabled={sending}>
                   Annuler

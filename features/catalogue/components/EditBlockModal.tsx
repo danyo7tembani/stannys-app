@@ -12,7 +12,13 @@ import {
   type DragEndEvent,
 } from "@dnd-kit/core";
 import { arrayMove, SortableContext, rectSortingStrategy } from "@dnd-kit/sortable";
-import { Button, Input, ConfirmDeleteModal } from "@/shared/ui";
+import {
+  Button,
+  Input,
+  ConfirmDeleteModal,
+  showErrorToast,
+  showSuccessToast,
+} from "@/shared/ui";
 import { apiUrl, getImageUrl } from "@/shared/api/client";
 import { slugify } from "@/shared/utils/slugify";
 import type { BlocMurDeStyle } from "@/lib/backend/mur-de-style/types";
@@ -47,8 +53,6 @@ export function EditBlockModal({ section, bloc, onClose, onSaved, onDeleted }: E
   const slideInputRef = useRef<HTMLInputElement>(null);
   const panelInputRef = useRef<HTMLInputElement>(null);
   const [sending, setSending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [titre, setTitre] = useState(bloc.titre ?? "");
   const [texteLong, setTexteLong] = useState(bloc.texteLong ?? "");
   const [texteCourt, setTexteCourt] = useState(bloc.texteCourt ?? "");
@@ -115,13 +119,11 @@ export function EditBlockModal({ section, bloc, onClose, onSaved, onDeleted }: E
         URL.revokeObjectURL(item.previewUrl);
       return prev.filter((_, i) => i !== index);
     });
-    setError(null);
   };
 
   const onSlideImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files?.length) return;
-    setError(null);
     const list = Array.from(files).slice(0, MAX_SLIDER_IMAGES - slideItems.length);
     const newItems: SlideThumbnailItem[] = list.map((file) => {
       const previewUrl = URL.createObjectURL(file);
@@ -146,18 +148,15 @@ export function EditBlockModal({ section, bloc, onClose, onSaved, onDeleted }: E
   };
   const clearPanelUrl = () => {
     setPanelUrl("");
-    setError(null);
   };
   const clearPanelNew = () => {
     if (panelNewPreviewUrl?.startsWith("blob:")) URL.revokeObjectURL(panelNewPreviewUrl);
     setPanelNewPreviewUrl(null);
     setPanelNewFile(null);
-    setError(null);
   };
   const onPanelImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files?.length) return;
-    setError(null);
     const newUrl = URL.createObjectURL(files[0]);
     setPanelNewPreviewUrl((prev) => {
       if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
@@ -169,17 +168,16 @@ export function EditBlockModal({ section, bloc, onClose, onSaved, onDeleted }: E
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
     if (!titre.trim()) {
-      setError("Le titre est requis.");
+      showErrorToast("Le titre est requis.");
       return;
     }
     if (slideItems.length === 0) {
-      setError("Conservez ou ajoutez au moins une image pour le slide.");
+      showErrorToast("Conservez ou ajoutez au moins une image pour le slide.");
       return;
     }
     if (slideItems.length < MIN_SLIDER_IMAGES) {
-      setError(
+      showErrorToast(
         `Le slide doit contenir au moins ${MIN_SLIDER_IMAGES} images (actuellement ${slideItems.length}).`
       );
       return;
@@ -220,14 +218,13 @@ export function EditBlockModal({ section, bloc, onClose, onSaved, onDeleted }: E
         throw new Error(data.error ?? "Erreur lors de la modification du bloc");
       }
       const updated = await res.json();
-      setError(null);
-      setSuccessMessage("Section enregistrée.");
+      showSuccessToast("Section enregistrée.");
       setTimeout(() => {
         onSaved(updated);
         onClose();
-      }, 1200);
+      }, 400);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erreur inconnue");
+      showErrorToast(err instanceof Error ? err.message : "Erreur inconnue");
     } finally {
       setSending(false);
     }
@@ -235,22 +232,20 @@ export function EditBlockModal({ section, bloc, onClose, onSaved, onDeleted }: E
 
   const handleConfirmDelete = async () => {
     setSending(true);
-    setError(null);
     try {
       const res = await fetch(apiUrl(`catalogue/${section}/blocks/${bloc.id}`), { method: "DELETE" });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error ?? "Erreur lors de la suppression du bloc");
       }
-      setError(null);
-      setSuccessMessage("Section supprimée.");
+      showSuccessToast("Bloc supprimé.");
       setShowDeleteConfirm(false);
       setTimeout(() => {
         onDeleted();
         onClose();
-      }, 1200);
+      }, 400);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erreur inconnue");
+      showErrorToast(err instanceof Error ? err.message : "Erreur inconnue");
       setShowDeleteConfirm(false);
     } finally {
       setSending(false);
@@ -259,8 +254,6 @@ export function EditBlockModal({ section, bloc, onClose, onSaved, onDeleted }: E
 
   const handleClose = () => {
     if (sending) return;
-    setSuccessMessage(null);
-    setError(null);
     slideItems.forEach((item) => {
       if (item.kind === "file" && item.previewUrl.startsWith("blob:"))
         URL.revokeObjectURL(item.previewUrl);
@@ -392,17 +385,6 @@ export function EditBlockModal({ section, bloc, onClose, onSaved, onDeleted }: E
             onChange={(e) => setTexteCourt(e.target.value)}
             placeholder="Costume"
           />
-
-          {successMessage && (
-            <p className="text-sm text-emerald-400" role="status">
-              {successMessage}
-            </p>
-          )}
-          {error && (
-            <p className="text-sm text-red-400" role="alert">
-              {error}
-            </p>
-          )}
 
           <div className="flex flex-wrap gap-3 pt-2">
             <Button type="button" variant="ghost" onClick={handleClose} disabled={sending}>

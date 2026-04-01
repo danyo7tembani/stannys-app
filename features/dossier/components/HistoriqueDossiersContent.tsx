@@ -3,9 +3,10 @@
 import { useEffect, useState, useMemo, useCallback, memo } from "react";
 import Link from "next/link";
 import { ROUTES } from "@/shared/constants";
-import { ConfirmDeleteModal } from "@/shared/ui";
+import { ConfirmDeleteModal, showErrorToast, showSuccessToast } from "@/shared/ui";
 import { useDossiersHistoryStore } from "../store";
 import type { DossierEnregistre } from "../store";
+import { digitsOnly, formatNationalDisplay } from "../utils/phone-format";
 
 function formatDate(iso: string): string {
   try {
@@ -33,11 +34,17 @@ function hasAnnotations(d: DossierEnregistre): boolean {
 function formatContactLine(d: DossierEnregistre): string {
   const c1 =
     d.contact1 != null && d.contact1 !== ""
-      ? `${d.contact1Prefix ?? ""} ${d.contact1}`.trim()
+      ? `${d.contact1Prefix ?? ""} ${formatNationalDisplay(
+          digitsOnly(d.contact1),
+          d.contact1Prefix ?? "+242"
+        )}`.trim()
       : "";
   const c2 =
     (d.contact2 ?? "").trim() !== ""
-      ? `${d.contact2Prefix ?? ""} ${d.contact2}`.trim()
+      ? `${d.contact2Prefix ?? ""} ${formatNationalDisplay(
+          digitsOnly(d.contact2 ?? ""),
+          d.contact2Prefix ?? "+242"
+        )}`.trim()
       : "";
   if (c1 && c2) return `${c1} · ${c2}`;
   if (c1) return c1;
@@ -75,11 +82,13 @@ const HistoriqueDossierItem = memo(function HistoriqueDossierItem({
           {d.prenom} {d.nom}
         </p>
         <p className="text-sm text-luxe-blanc-muted">
-          {formatContactLine(d)}
+          <span className="font-dossier-nombres">{formatContactLine(d)}</span>
           {d.adresse ? ` · ${d.adresse}` : ""}
         </p>
         <p className="mt-1 text-xs text-luxe-blanc-muted/80">
-          Enregistré le {formatDate(d.createdAt)}
+          <span className="font-dossier-nombres">
+            Enregistré le {formatDate(d.createdAt)}
+          </span>
           <span className="ml-2">
             {(d.status ?? "brouillon") === "definitif" ? (
               <span className="rounded bg-luxe-or/20 px-1.5 py-0.5 text-xs text-luxe-or">
@@ -143,11 +152,13 @@ const AtelierDossierItem = memo(function AtelierDossierItem({
           {d.prenom} {d.nom}
         </p>
         <p className="text-sm text-luxe-blanc-muted">
-          {formatContactLine(d)}
+          <span className="font-dossier-nombres">{formatContactLine(d)}</span>
           {d.adresse ? ` · ${d.adresse}` : ""}
         </p>
         <p className="mt-1 text-xs text-luxe-blanc-muted/80">
-          Enregistré le {formatDate(d.createdAt)}
+          <span className="font-dossier-nombres">
+            Enregistré le {formatDate(d.createdAt)}
+          </span>
           <span className="ml-2">
             {atelierStatut === "termine" ? (
               <span className="rounded bg-green-500/20 px-1.5 py-0.5 text-xs text-green-400">
@@ -204,11 +215,13 @@ const AdminStatutDossierItem = memo(function AdminStatutDossierItem({ d }: { d: 
           {d.prenom} {d.nom}
         </p>
         <p className="text-sm text-luxe-blanc-muted">
-          {formatContactLine(d)}
+          <span className="font-dossier-nombres">{formatContactLine(d)}</span>
           {d.adresse ? ` · ${d.adresse}` : ""}
         </p>
         <p className="mt-1 text-xs text-luxe-blanc-muted/80">
-          Enregistré le {formatDate(d.createdAt)}
+          <span className="font-dossier-nombres">
+            Enregistré le {formatDate(d.createdAt)}
+          </span>
           <span className="ml-2">
             {atelierStatut === "termine" ? (
               <span className="rounded bg-green-500/20 px-1.5 py-0.5 text-xs text-green-400">
@@ -263,6 +276,10 @@ export function HistoriqueDossiersContent({ mode = "default" }: { mode?: Histori
     fetchDossiers();
   }, [fetchDossiers]);
 
+  useEffect(() => {
+    if (error) showErrorToast(error);
+  }, [error]);
+
   const filteredAndSorted = useMemo(() => {
     let list = [...dossiers];
     const q = searchQuery.trim().toLowerCase();
@@ -305,7 +322,12 @@ export function HistoriqueDossiersContent({ mode = "default" }: { mode?: Histori
       setDeletingId(id);
       try {
         await removeDossier(id);
+        showSuccessToast("Dossier supprimé.");
         setConfirmDeleteId(null);
+      } catch (e) {
+        showErrorToast(
+          e instanceof Error ? e.message : "Impossible de supprimer le dossier."
+        );
       } finally {
         setDeletingId(null);
       }
@@ -322,6 +344,11 @@ export function HistoriqueDossiersContent({ mode = "default" }: { mode?: Histori
       setMarkingId(id);
       try {
         await updateDossierStatus(id, "definitif");
+        showSuccessToast("Dossier marqué définitif.");
+      } catch (e) {
+        showErrorToast(
+          e instanceof Error ? e.message : "Impossible de mettre à jour le statut."
+        );
       } finally {
         setMarkingId(null);
       }
@@ -334,6 +361,11 @@ export function HistoriqueDossiersContent({ mode = "default" }: { mode?: Histori
       setMarkingAtelierId(id);
       try {
         await updateDossierAtelierStatut(id, "en_cours");
+        showSuccessToast("Statut : en cours.");
+      } catch (e) {
+        showErrorToast(
+          e instanceof Error ? e.message : "Impossible de mettre à jour le statut."
+        );
       } finally {
         setMarkingAtelierId(null);
       }
@@ -346,6 +378,11 @@ export function HistoriqueDossiersContent({ mode = "default" }: { mode?: Histori
       setMarkingAtelierId(id);
       try {
         await updateDossierAtelierStatut(id, "termine");
+        showSuccessToast("Statut : terminé.");
+      } catch (e) {
+        showErrorToast(
+          e instanceof Error ? e.message : "Impossible de mettre à jour le statut."
+        );
       } finally {
         setMarkingAtelierId(null);
       }
@@ -385,12 +422,6 @@ export function HistoriqueDossiersContent({ mode = "default" }: { mode?: Histori
             ? "Recherchez et suivez les dossiers. Marquez « En cour » ou « Terminé » selon l'avancement."
             : "Dossiers enregistrés depuis la saisie des mesures (informations personnelles + mesures)."}
       </p>
-
-      {error && (
-        <div className="mt-4 rounded-lg border border-red-400/40 bg-red-400/10 px-4 py-2 text-sm text-red-400">
-          {error}
-        </div>
-      )}
 
       <div className="mt-6 space-y-4 rounded-lg border border-luxe-or-muted/30 bg-luxe-noir-soft p-4">
         <label className="block text-sm font-medium text-luxe-blanc">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { AppToastMount } from "@/shared/ui";
 import { useSettingsStore } from "../store";
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
@@ -25,5 +26,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
   }, [theme]);
 
-  return <>{children}</>;
+  return (
+    <>
+      {children}
+      <AppToastMount />
+    </>
+  );
 }

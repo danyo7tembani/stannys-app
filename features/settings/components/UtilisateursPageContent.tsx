@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ROUTES } from "@/shared/constants";
 import { apiUrl } from "@/shared/api/client";
+import { showErrorToast, showSuccessToast } from "@/shared/ui";
 import { useAuthStore } from "@/features/auth/store";
 
 interface UserRow {
@@ -17,9 +18,7 @@ export function UtilisateursPageContent() {
   const role = useAuthStore((s) => s.role);
   const [users, setUsers] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [updating, setUpdating] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (role !== "admin") {
@@ -34,7 +33,7 @@ export function UtilisateursPageContent() {
         const data = await res.json();
         if (!cancelled) setUsers(Array.isArray(data) ? data : []);
       } catch (e) {
-        if (!cancelled) setError("Impossible de charger les utilisateurs.");
+        if (!cancelled) showErrorToast("Impossible de charger les utilisateurs.");
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -48,8 +47,6 @@ export function UtilisateursPageContent() {
     async (r: string, newCode: string, adminPassword: string) => {
       if (!newCode.trim() || !adminPassword) return;
       setUpdating(r);
-      setError(null);
-      setMessage(null);
       try {
         const res = await fetch(apiUrl("users/code"), {
           method: "PUT",
@@ -62,12 +59,12 @@ export function UtilisateursPageContent() {
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) {
-          setError(data.error ?? "Erreur lors de la modification.");
+          showErrorToast(data.error ?? "Erreur lors de la modification.");
           return;
         }
-        setMessage(`Code pour ${r} mis à jour.`);
+        showSuccessToast(`Code pour ${r} mis à jour.`);
       } catch {
-        setError("Erreur de connexion.");
+        showErrorToast("Erreur de connexion.");
       } finally {
         setUpdating(null);
       }
@@ -103,17 +100,6 @@ export function UtilisateursPageContent() {
       <p className="mt-2 text-luxe-blanc-muted">
         Attribuez ou modifiez le code (mot de passe) de chaque rôle. Connexion avec le nom du rôle et ce code.
       </p>
-
-      {error && (
-        <p className="mt-4 text-sm text-red-400" role="alert">
-          {error}
-        </p>
-      )}
-      {message && (
-        <p className="mt-4 text-sm text-emerald-400" role="status">
-          {message}
-        </p>
-      )}
 
       <div className="mt-8 space-y-6">
         {users.map((u) => (

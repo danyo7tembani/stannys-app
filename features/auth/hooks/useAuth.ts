@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { ROUTES } from "@/shared/constants";
 import { apiUrl } from "@/shared/api/client";
+import { showErrorToast } from "@/shared/ui";
 import { useAuthStore } from "../store";
 import type { AuthRole } from "../store/auth-store";
 import type { LoginCredentials } from "../types";
@@ -17,11 +18,8 @@ export function useAuth() {
     logout,
     setShowPostLoginSplash,
   } = useAuthStore();
-  const [error, setError] = useState<string | null>(null);
-
   const login = useCallback(
     async (credentials: LoginCredentials) => {
-      setError(null);
       try {
         const res = await fetch(apiUrl("auth/login"), {
           method: "POST",
@@ -33,11 +31,11 @@ export function useAuth() {
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) {
-          setError(data.error ?? "Identifiants incorrects");
+          showErrorToast(data.error ?? "Identifiants incorrects");
           return false;
         }
         if (!data.role || !["admin", "editeur", "lecteur", "atelier"].includes(data.role)) {
-          setError("Identifiants incorrects");
+          showErrorToast("Identifiants incorrects");
           return false;
         }
         setSession(credentials.username.trim().toLowerCase(), data.role as AuthRole);
@@ -45,7 +43,7 @@ export function useAuth() {
         router.push(data.role === "atelier" ? ROUTES.DOSSIERS_ATELIER : ROUTES.HOME);
         return true;
       } catch {
-        setError("Erreur de connexion");
+        showErrorToast("Erreur de connexion");
         return false;
       }
     },
@@ -57,5 +55,5 @@ export function useAuth() {
     router.push(ROUTES.LOGIN);
   }, [logout, router]);
 
-  return { login, logout: logoutAndRedirect, error, isAuthenticated, username };
+  return { login, logout: logoutAndRedirect, isAuthenticated, username };
 }

@@ -16,7 +16,7 @@ import type { Vetement } from "../types";
 import type { BlocMurDeStyle } from "@/lib/backend/mur-de-style/types";
 import type { CatalogueSection } from "@/shared/constants";
 import { apiUrl } from "@/shared/api/client";
-import { ConfirmDeleteModal } from "@/shared/ui";
+import { ConfirmDeleteModal, showErrorToast, showSuccessToast } from "@/shared/ui";
 import { useAuthStore } from "@/features/auth/store";
 import { canEditCatalogue } from "@/features/auth";
 import { CatalogueSectionSwitcher } from "./CatalogueSectionSwitcher";
@@ -59,7 +59,6 @@ export function MurDeStyle({ section, vetements }: MurDeStyleProps) {
   const [optimisticBloc, setOptimisticBloc] = useState<BlocMurDeStyle | null>(null);
   const [editingBloc, setEditingBloc] = useState<BlocMurDeStyle | null>(null);
   const [orderedList, setOrderedList] = useState<BlocMurDeStyle[]>([]);
-  const [listError, setListError] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isListLoading, setIsListLoading] = useState(false);
   const [globalSubtitle, setGlobalSubtitle] = useState<string | null>(null);
@@ -211,7 +210,6 @@ export function MurDeStyle({ section, vetements }: MurDeStyleProps) {
     const next = arrayMove(listToUse, oldIndex, newIndex);
     setOrderedList(next);
     const payload = next.map((b: BlocMurDeStyle, ordre: number) => ({ id: b.id, ordre }));
-    setListError(null);
     fetch(apiUrl(`catalogue/${section}/blocks/reorder`), {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -219,21 +217,20 @@ export function MurDeStyle({ section, vetements }: MurDeStyleProps) {
     })
       .then((r) => {
         if (r.ok) {
-          setListError(null);
+          showSuccessToast("Ordre enregistré.");
           fetchBlocs();
         } else {
-          setListError("Impossible de réordonner les sections.");
+          showErrorToast("Impossible de réordonner les sections.");
           fetchBlocs();
         }
       })
       .catch(() => {
-        setListError("Impossible de réordonner les sections.");
+        showErrorToast("Impossible de réordonner les sections.");
         fetchBlocs();
       });
   };
 
   const handleEditBloc = (bloc: BlocMurDeStyle) => {
-    setListError(null);
     setEditingBloc(bloc);
   };
 
@@ -246,20 +243,19 @@ export function MurDeStyle({ section, vetements }: MurDeStyleProps) {
 
   const handleConfirmDeleteBloc = () => {
     if (!blocToDelete) return;
-    setListError(null);
     setDeletingBlocId(blocToDelete.id);
     fetch(apiUrl(`catalogue/${section}/blocks/${blocToDelete.id}`), { method: "DELETE" })
       .then((r) => {
         if (r.ok) {
-          setListError(null);
+          showSuccessToast("Bloc supprimé.");
           setEditingBloc((prev) => (prev?.id === blocToDelete.id ? null : prev));
           setBlocToDelete(null);
           fetchBlocs();
         } else {
-          setListError("Impossible de supprimer le bloc.");
+          showErrorToast("Impossible de supprimer le bloc.");
         }
       })
-      .catch(() => setListError("Impossible de supprimer le bloc."))
+      .catch(() => showErrorToast("Impossible de supprimer le bloc."))
       .finally(() => setDeletingBlocId(null));
   };
 
@@ -295,11 +291,6 @@ export function MurDeStyle({ section, vetements }: MurDeStyleProps) {
             Réessayer
           </button>
         </div>
-      )}
-      {listError && (
-        <p className="mb-3 text-center text-sm text-red-400" role="alert">
-          {listError}
-        </p>
       )}
       {showSkeleton ? (
         <div className="w-full max-w-5xl space-y-3 px-4">
@@ -362,12 +353,10 @@ export function MurDeStyle({ section, vetements }: MurDeStyleProps) {
               bloc={editingBloc}
               onClose={() => setEditingBloc(null)}
               onSaved={() => {
-                setListError(null);
                 fetchBlocs();
                 setEditingBloc(null);
               }}
               onDeleted={() => {
-                setListError(null);
                 fetchBlocs();
                 setEditingBloc(null);
               }}

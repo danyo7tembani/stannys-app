@@ -6,7 +6,7 @@ import { AuthNeonButton } from "./AuthNeonButton";
 import { useAuth } from "../hooks";
 
 export function LoginForm() {
-  const { login, error } = useAuth();
+  const { login } = useAuth();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
@@ -38,11 +38,6 @@ export function LoginForm() {
         autoComplete="current-password"
         required
       />
-      {error && (
-        <p className="text-sm text-red-400" role="alert">
-          {error}
-        </p>
-      )}
       <div className="flex justify-center">
         <AuthNeonButton>Se connecter</AuthNeonButton>
       </div>

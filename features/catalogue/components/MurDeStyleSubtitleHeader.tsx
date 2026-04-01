@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { apiUrl } from "@/shared/api/client";
-import { ConfirmDeleteModal } from "@/shared/ui";
+import { ConfirmDeleteModal, showErrorToast, showSuccessToast } from "@/shared/ui";
 import { useAuthStore } from "@/features/auth/store";
 import { canEditCatalogue } from "@/features/auth";
 import type { CatalogueSection } from "@/shared/constants";
@@ -25,7 +25,6 @@ export function MurDeStyleSubtitleHeader({ section, subtitle, onUpdated }: MurDe
   const [editing, setEditing] = useState(false);
   const [editValue, setEditValue] = useState(subtitle ?? "");
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -44,7 +43,6 @@ export function MurDeStyleSubtitleHeader({ section, subtitle, onUpdated }: MurDe
   }, [dropdownOpen]);
 
   const handleSave = async () => {
-    setError(null);
     setSaving(true);
     try {
       const res = await fetch(apiUrl(`catalogue/${section}/config`), {
@@ -58,18 +56,18 @@ export function MurDeStyleSubtitleHeader({ section, subtitle, onUpdated }: MurDe
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error ?? "Erreur lors de l’enregistrement");
       }
+      showSuccessToast("Sous-titre enregistré.");
       onUpdated();
       setEditing(false);
       setDropdownOpen(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erreur inconnue");
+      showErrorToast(err instanceof Error ? err.message : "Erreur inconnue");
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async () => {
-    setError(null);
     setDropdownOpen(false);
     setSaving(true);
     try {
@@ -78,11 +76,12 @@ export function MurDeStyleSubtitleHeader({ section, subtitle, onUpdated }: MurDe
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error ?? "Erreur lors de la suppression");
       }
+      showSuccessToast("Sous-titre supprimé.");
       onUpdated();
       setEditValue("");
       setShowConfirmDelete(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erreur inconnue");
+      showErrorToast(err instanceof Error ? err.message : "Erreur inconnue");
     } finally {
       setSaving(false);
     }
@@ -218,12 +217,6 @@ export function MurDeStyleSubtitleHeader({ section, subtitle, onUpdated }: MurDe
           </>
         )}
       </div>
-      {error && (
-        <p className="mt-2 text-sm text-red-400" role="alert">
-          {error}
-        </p>
-      )}
-
       <ConfirmDeleteModal
         open={showConfirmDelete}
         onConfirm={handleDelete}
