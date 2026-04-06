@@ -320,7 +320,7 @@ export function MurDeStyleBloc({ section, bloc, onEdit, onDelete, dragHandleProp
             ref={ribbonRef}
             className="flex shrink-0 select-none"
             style={{
-              gap: isCoarsePointer ? 2 : 3,
+              gap: 3,
               willChange: "transform",
               backfaceVisibility: "hidden",
               contain: "layout style paint",
@@ -340,10 +340,9 @@ export function MurDeStyleBloc({ section, bloc, onEdit, onDelete, dragHandleProp
                 style={{
                   width: BLOCK_WIDTH,
                   height: BLOCK_HEIGHT,
-                  // On tactile, fuse border+image in one stable layer to avoid gold-edge shimmer.
-                  padding: isCoarsePointer ? 0 : 3,
-                  backgroundColor: isCoarsePointer ? "transparent" : FRAME_BROWN,
-                  border: isCoarsePointer ? "none" : `1px solid ${FRAME_BROWN}`,
+                  padding: 0,
+                  backgroundColor: "transparent",
+                  border: "none",
                 }}
                 onMouseEnter={() => setHoveredSlideIndex(i)}
                 onMouseLeave={() => setHoveredSlideIndex(null)}
@@ -352,10 +351,8 @@ export function MurDeStyleBloc({ section, bloc, onEdit, onDelete, dragHandleProp
                   className="relative h-full w-full overflow-hidden rounded-md"
                   style={{
                     border: isCoarsePointer
-                      ? "2px solid transparent"
+                      ? "2px solid #A38B5E"
                       : `1px solid ${GOLD_1PX}`,
-                    borderTopColor: isCoarsePointer ? "#A38B5E" : undefined,
-                    borderBottomColor: isCoarsePointer ? "#A38B5E" : undefined,
                     filter:
                       isCoarsePointerRef.current
                         ? "none"
@@ -384,13 +381,6 @@ export function MurDeStyleBloc({ section, bloc, onEdit, onDelete, dragHandleProp
                     sizes="280px"
                     unoptimized={src.startsWith("blob:")}
                   />
-                  {isCoarsePointer && i < duplicatedImages.length - 1 && (
-                    <span
-                      className="pointer-events-none absolute right-0 top-0 h-full w-[2px]"
-                      style={{ backgroundColor: "#A38B5E" }}
-                      aria-hidden
-                    />
-                  )}
                 </div>
               </div>
             ))}
