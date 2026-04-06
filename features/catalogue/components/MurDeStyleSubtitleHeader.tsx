@@ -121,7 +121,6 @@ export function MurDeStyleSubtitleHeader({ section, subtitle, onUpdated }: MurDe
                 onClick={() => {
                   setEditing(false);
                   setEditValue(subtitle ?? "");
-                  setError(null);
                 }}
                 disabled={saving}
                 className="rounded border border-luxe-blanc-muted/40 px-3 py-1.5 text-sm text-luxe-blanc-muted hover:bg-white/10 disabled:opacity-50"
