@@ -1,6 +1,11 @@
 import { isValidEmail } from "@/shared/utils/email";
 import type { DossierClient } from "../types";
 import {
+  digitsOnly,
+  getPhoneFieldStatus,
+  isCompleteNationalNumber,
+} from "../utils/phone-format";
+import {
   MESURES_HAUT_DU_CORPS,
   MESURES_BRAS,
   MESURES_BAS_DU_CORPS,
@@ -20,12 +25,20 @@ export function saveDossierDraft(_data: Partial<DossierClient>): Promise<void> {
  * Les photos sont facultatives.
  */
 export function isDossierStepValid(data: Partial<DossierClient>): boolean {
-  const hasContact1 = (data.contact1 ?? data.contact ?? "").trim().length > 0;
+  const p1 = data.contact1Prefix ?? "+242";
+  const c1 = digitsOnly(data.contact1 ?? data.contact ?? "");
+  const contact1Ok =
+    c1.length > 0 && isCompleteNationalNumber(c1, p1);
+  const p2 = data.contact2Prefix ?? "+242";
+  const c2 = digitsOnly(data.contact2 ?? "");
+  const contact2Ok =
+    getPhoneFieldStatus(c2, p2, true) !== "incomplete";
   const mailOk = isValidEmail(data.mail);
   return Boolean(
     data.nom?.trim() &&
       data.prenom?.trim() &&
-      hasContact1 &&
+      contact1Ok &&
+      contact2Ok &&
       data.adresse?.trim() &&
       mailOk
   );
