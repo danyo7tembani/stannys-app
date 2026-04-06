@@ -351,8 +351,10 @@ export function MurDeStyleBloc({ section, bloc, onEdit, onDelete, dragHandleProp
                   className="relative h-full w-full overflow-hidden rounded-md"
                   style={{
                     border: isCoarsePointer
-                      ? "2px solid #A38B5E"
+                      ? "2px solid transparent"
                       : `1px solid ${GOLD_1PX}`,
+                    borderTopColor: isCoarsePointer ? "#A38B5E" : undefined,
+                    borderBottomColor: isCoarsePointer ? "#A38B5E" : undefined,
                     filter:
                       isCoarsePointerRef.current
                         ? "none"
@@ -381,6 +383,13 @@ export function MurDeStyleBloc({ section, bloc, onEdit, onDelete, dragHandleProp
                     sizes="280px"
                     unoptimized={src.startsWith("blob:")}
                   />
+                  {isCoarsePointer && i < duplicatedImages.length - 1 && (
+                    <span
+                      className="pointer-events-none absolute right-0 top-0 h-full w-[2px]"
+                      style={{ backgroundColor: "#A38B5E" }}
+                      aria-hidden
+                    />
+                  )}
                 </div>
               </div>
             ))}
