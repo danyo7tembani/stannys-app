@@ -6,7 +6,7 @@
 export const BLOCK_WIDTH = 280;
 export const BLOCK_HEIGHT = 380;
 export const GAP = 3;
-export const SLIDE_DURATION_MS = 120000;
+export const SLIDE_VELOCITY_PX_MS = 0.02; // 20 px/s, constant speed regardless of image count
 
 /**
  * Largeur d'un "set" (une répétition des images) pour la boucle infinie.
@@ -17,10 +17,10 @@ export function getSetWidth(imageCount: number): number {
 }
 
 /**
- * Vitesse de défilement (px/ms) pour un tour complet en SLIDE_DURATION_MS.
+ * Vitesse de défilement constante (px/ms), indépendante du nombre d'images.
  */
-export function getSlideVelocityPxMs(imageCount: number): number {
-  return getSetWidth(imageCount) / SLIDE_DURATION_MS;
+export function getSlideVelocityPxMs(_imageCount: number): number {
+  return SLIDE_VELOCITY_PX_MS;
 }
 
 /**

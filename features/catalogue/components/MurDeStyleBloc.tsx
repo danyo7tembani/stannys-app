@@ -73,6 +73,8 @@ export function MurDeStyleBloc({ section, bloc, onEdit, onDelete, dragHandleProp
 
   const [isPaused, setIsPaused] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [isDocumentVisible, setIsDocumentVisible] = useState(true);
+  const [isInView, setIsInView] = useState(true);
   const [hoveredSlideIndex, setHoveredSlideIndex] = useState<number | null>(null);
   const lastPointerXRef = useRef(0);
   const lastTimeRef = useRef<number>(0);
@@ -86,9 +88,40 @@ export function MurDeStyleBloc({ section, bloc, onEdit, onDelete, dragHandleProp
   const accumulatedDeltaXRef = useRef(0);
   const accumulatedDeltaYRef = useRef(0);
   const ribbonRef = useRef<HTMLDivElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const isInViewRef = useRef(isInView);
+  const isDocumentVisibleRef = useRef(isDocumentVisible);
   const AXIS_THRESHOLD_PX = 10;
   isPausedRef.current = isPaused;
   isDraggingRef.current = isDragging;
+  isInViewRef.current = isInView;
+  isDocumentVisibleRef.current = isDocumentVisible;
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      setIsDocumentVisible(document.visibilityState === "visible");
+    };
+    handleVisibilityChange();
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, []);
+
+  useEffect(() => {
+    const target = rootRef.current;
+    if (!target) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (!entry) return;
+        setIsInView(entry.intersectionRatio >= 0.25);
+      },
+      {
+        threshold: [0, 0.25, 0.5, 0.75, 1],
+      }
+    );
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     const el = ribbonRef.current;
@@ -107,7 +140,12 @@ export function MurDeStyleBloc({ section, bloc, onEdit, onDelete, dragHandleProp
       } else if (isDraggingRef.current) {
         slideOffsetRef.current = clampSlideOffset(slideOffsetRef.current + dragDeltaRef.current, setW);
         dragDeltaRef.current = 0;
-      } else if (!isPausedRef.current && dt > 0) {
+      } else if (
+        !isPausedRef.current &&
+        isInViewRef.current &&
+        isDocumentVisibleRef.current &&
+        dt > 0
+      ) {
         slideOffsetRef.current -= velocity * dt;
         if (slideOffsetRef.current <= -setW) slideOffsetRef.current += setW;
       }
@@ -177,7 +215,7 @@ export function MurDeStyleBloc({ section, bloc, onEdit, onDelete, dragHandleProp
   const slug = (bloc.slug ?? "").trim() || "costume-croise-navy";
 
   return (
-    <div className="flex w-full max-w-full flex-col items-center px-3 py-4">
+    <div ref={rootRef} className="flex w-full max-w-full flex-col items-center px-3 py-4">
       <div className="w-full overflow-x-auto [@media(orientation:portrait)]:overflow-x-hidden">
         <div className="mx-auto min-w-[1050px] w-[1050px] text-left" style={{ boxShadow: "none" }}>
           <div
