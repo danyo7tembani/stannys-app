@@ -318,8 +318,9 @@ export function MurDeStyleBloc({ section, bloc, onEdit, onDelete, dragHandleProp
         >
           <div
             ref={ribbonRef}
-            className="flex shrink-0 gap-[3px] select-none"
+            className="flex shrink-0 select-none"
             style={{
+              gap: isCoarsePointer ? 2 : 3,
               willChange: "transform",
               backfaceVisibility: "hidden",
               contain: "layout style paint",
