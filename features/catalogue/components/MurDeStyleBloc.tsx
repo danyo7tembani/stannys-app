@@ -339,8 +339,10 @@ export function MurDeStyleBloc({ section, bloc, onEdit, onDelete, dragHandleProp
                 style={{
                   width: BLOCK_WIDTH,
                   height: BLOCK_HEIGHT,
-                  backgroundColor: FRAME_BROWN,
-                  border: `1px solid ${FRAME_BROWN}`,
+                  // On tactile, fuse border+image in one stable layer to avoid gold-edge shimmer.
+                  padding: isCoarsePointer ? 0 : 3,
+                  backgroundColor: isCoarsePointer ? "transparent" : FRAME_BROWN,
+                  border: isCoarsePointer ? "none" : `1px solid ${FRAME_BROWN}`,
                 }}
                 onMouseEnter={() => setHoveredSlideIndex(i)}
                 onMouseLeave={() => setHoveredSlideIndex(null)}
@@ -348,7 +350,9 @@ export function MurDeStyleBloc({ section, bloc, onEdit, onDelete, dragHandleProp
                 <div
                   className="relative h-full w-full overflow-hidden rounded-md"
                   style={{
-                    border: `1px solid ${GOLD_1PX}`,
+                    border: isCoarsePointer
+                      ? "2px solid #A38B5E"
+                      : `1px solid ${GOLD_1PX}`,
                     filter:
                       isCoarsePointerRef.current
                         ? "none"
@@ -366,6 +370,7 @@ export function MurDeStyleBloc({ section, bloc, onEdit, onDelete, dragHandleProp
                         ? "none"
                         : "filter 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
                     backfaceVisibility: "hidden",
+                    boxShadow: isCoarsePointer ? "none" : OMBRE_FINE_CADRE,
                   }}
                 >
                   <Image
