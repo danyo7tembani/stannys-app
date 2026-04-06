@@ -75,6 +75,7 @@ export function MurDeStyleBloc({ section, bloc, onEdit, onDelete, dragHandleProp
   const [isDragging, setIsDragging] = useState(false);
   const [isDocumentVisible, setIsDocumentVisible] = useState(true);
   const [isInView, setIsInView] = useState(true);
+  const [isCoarsePointer, setIsCoarsePointer] = useState(false);
   const [hoveredSlideIndex, setHoveredSlideIndex] = useState<number | null>(null);
   const lastPointerXRef = useRef(0);
   const lastTimeRef = useRef<number>(0);
@@ -91,11 +92,13 @@ export function MurDeStyleBloc({ section, bloc, onEdit, onDelete, dragHandleProp
   const rootRef = useRef<HTMLDivElement>(null);
   const isInViewRef = useRef(isInView);
   const isDocumentVisibleRef = useRef(isDocumentVisible);
+  const isCoarsePointerRef = useRef(isCoarsePointer);
   const AXIS_THRESHOLD_PX = 10;
   isPausedRef.current = isPaused;
   isDraggingRef.current = isDragging;
   isInViewRef.current = isInView;
   isDocumentVisibleRef.current = isDocumentVisible;
+  isCoarsePointerRef.current = isCoarsePointer;
 
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -104,6 +107,14 @@ export function MurDeStyleBloc({ section, bloc, onEdit, onDelete, dragHandleProp
     handleVisibilityChange();
     document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, []);
+
+  useEffect(() => {
+    const media = window.matchMedia("(pointer: coarse)");
+    const sync = () => setIsCoarsePointer(media.matches);
+    sync();
+    media.addEventListener("change", sync);
+    return () => media.removeEventListener("change", sync);
   }, []);
 
   useEffect(() => {
@@ -149,7 +160,10 @@ export function MurDeStyleBloc({ section, bloc, onEdit, onDelete, dragHandleProp
         slideOffsetRef.current -= velocity * dt;
         if (slideOffsetRef.current <= -setW) slideOffsetRef.current += setW;
       }
-      el.style.transform = `translate3d(${slideOffsetRef.current}px, 0, 0)`;
+      const renderedOffset = isCoarsePointerRef.current
+        ? Math.round(slideOffsetRef.current)
+        : slideOffsetRef.current;
+      el.style.transform = `translate3d(${renderedOffset}px, 0, 0)`;
       rafId = requestAnimationFrame(tick);
     };
     rafId = requestAnimationFrame(tick);
@@ -336,17 +350,21 @@ export function MurDeStyleBloc({ section, bloc, onEdit, onDelete, dragHandleProp
                   style={{
                     border: `1px solid ${GOLD_1PX}`,
                     filter:
-                      hoveredSlideIndex !== null
+                      isCoarsePointerRef.current
+                        ? "none"
+                        : hoveredSlideIndex !== null
                         ? hoveredSlideIndex === i
                           ? "brightness(1.08) saturate(1.02)"
                           : "brightness(0.72) saturate(0.88)"
                         : "none",
                     transform:
-                      hoveredSlideIndex === i
+                      !isCoarsePointerRef.current && hoveredSlideIndex === i
                         ? "scale(1.06) translateZ(0)"
                         : "scale(1) translateZ(0)",
                     transition:
-                      "filter 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
+                      isCoarsePointerRef.current
+                        ? "none"
+                        : "filter 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
                     backfaceVisibility: "hidden",
                   }}
                 >
