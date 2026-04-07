@@ -95,7 +95,7 @@ const ThumbButtonUrl = memo(function ThumbButtonUrl({
   url: string;
   isActive: boolean;
   isSelected?: boolean;
-  selectedTone?: "or" | "bleu" | null;
+  selectedTone?: "or" | "bleu" | "blanc" | null;
   selectedRank?: number | null;
   onClick: () => void;
   className?: string;
@@ -108,6 +108,8 @@ const ThumbButtonUrl = memo(function ThumbButtonUrl({
       ? "border-[3px] border-amber-400 ring-1 ring-amber-400/70"
       : selectedTone === "bleu"
         ? "border-[3px] border-blue-400 ring-1 ring-blue-400/70"
+        : selectedTone === "blanc"
+          ? "border-[3px] border-white ring-1 ring-white/70"
         : "";
   return (
     <button
@@ -134,7 +136,7 @@ const ThumbButtonUrl = memo(function ThumbButtonUrl({
         sizes={flexible ? "33vw" : `${THUMB_W_PX}px`}
         unoptimized={thumbSrc.startsWith("blob:")}
       />
-      {isSelected && (
+      {isSelected && selectedTone !== "blanc" && (
         <span
           className={`absolute left-1 top-1 z-10 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] font-semibold text-black ${
             selectedTone === "or" ? "bg-amber-400" : "bg-blue-400"
@@ -264,10 +266,23 @@ export function ViewerHD({ vetement = null, bloc = null, section }: ViewerHDProp
     else setActiveIndex(index);
   };
 
-  const getSelectionMetaForIndex = (index: number): { tone: "or" | "bleu"; order: number } | null => {
-    if (!isSelectionModeVestes || !bloc || !displayUrls[index]) return null;
+  const getSelectionMetaForIndex = (index: number): { tone: "or" | "bleu" | "blanc"; order: number } | null => {
+    if (!bloc || !displayUrls[index]) return null;
     const item = buildBlocItem(index);
     if (!item) return null;
+    if (isSelectionModeChaussures) {
+      const chaussureIndex = selectedChaussures.findIndex(
+        (c) => c.blockId === item.blockId && c.imageUrl === item.imageUrl
+      );
+      return chaussureIndex !== -1 ? { tone: "blanc", order: chaussureIndex } : null;
+    }
+    if (isSelectionModeAccessoires) {
+      const accessoireIndex = selectedAccessoires.findIndex(
+        (a) => a.blockId === item.blockId && a.imageUrl === item.imageUrl
+      );
+      return accessoireIndex !== -1 ? { tone: "blanc", order: accessoireIndex } : null;
+    }
+    if (!isSelectionModeVestes) return null;
     if (selectedOr && selectedOr.blockId === item.blockId && selectedOr.imageUrl === item.imageUrl) {
       return { tone: "or", order: 0 };
     }
@@ -537,7 +552,9 @@ export function ViewerHD({ vetement = null, bloc = null, section }: ViewerHDProp
                       if (!meta) return "border-luxe-or-muted/30";
                       return meta.tone === "or"
                         ? "border-[3px] border-amber-400 ring-1 ring-amber-400/70"
-                        : "border-[3px] border-blue-400 ring-1 ring-blue-400/70";
+                        : meta.tone === "bleu"
+                          ? "border-[3px] border-blue-400 ring-1 ring-blue-400/70"
+                          : "border-[3px] border-white ring-1 ring-white/70";
                     })()
                   }`}
                   style={{ gridColumn: "1 / 4", gridRow: "1 / 3" }}
@@ -568,7 +585,7 @@ export function ViewerHD({ vetement = null, bloc = null, section }: ViewerHDProp
                       </div>
                       {(() => {
                         const meta = getSelectionMetaForIndex(displayIndex);
-                        if (!meta) return null;
+                        if (!meta || meta.tone === "blanc") return null;
                         return (
                           <span
                             className={`pointer-events-none absolute left-2 top-2 z-10 inline-flex min-h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-xs font-semibold text-black ${
