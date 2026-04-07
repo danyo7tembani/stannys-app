@@ -58,6 +58,11 @@
   .input-luxe {
     @apply w-full rounded-sm border border-luxe-or-muted/40 bg-luxe-noir-soft px-4 py-3 text-luxe-blanc placeholder-luxe-blanc-muted transition-colors focus:border-luxe-or focus:outline-none focus:ring-1 focus:ring-luxe-or/50;
   }
+  /** Chiffres (dossier client : dates, téléphones, mesures) */
+  .font-dossier-nombres {
+    font-family: Arial, Helvetica, sans-serif;
+    font-variant-numeric: tabular-nums;
+  }
 }
 
 /* Mesure button: lien direct, hover uniquement (blanc + zoom) */

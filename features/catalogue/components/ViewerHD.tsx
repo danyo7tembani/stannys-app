@@ -84,6 +84,9 @@ const ThumbButton = memo(function ThumbButton({
 const ThumbButtonUrl = memo(function ThumbButtonUrl({
   url,
   isActive,
+  isSelected = false,
+  selectedTone = null,
+  selectedRank = null,
   onClick,
   className = "",
   flexible = false,
@@ -91,18 +94,29 @@ const ThumbButtonUrl = memo(function ThumbButtonUrl({
 }: {
   url: string;
   isActive: boolean;
+  isSelected?: boolean;
+  selectedTone?: "or" | "bleu" | null;
+  selectedRank?: number | null;
   onClick: () => void;
   className?: string;
   flexible?: boolean;
   disableActiveHighlight?: boolean;
 }) {
   const thumbSrc = getImageUrl(url) || url;
+  const selectedClasses =
+    selectedTone === "or"
+      ? "border-[3px] border-amber-400 ring-1 ring-amber-400/70"
+      : selectedTone === "bleu"
+        ? "border-[3px] border-blue-400 ring-1 ring-blue-400/70"
+        : "";
   return (
     <button
       type="button"
       onClick={onClick}
       className={`viewer-thumb relative block overflow-hidden rounded border touch-manipulation ${flexible ? "w-full h-full aspect-[3/4] min-h-[96px]" : ""} ${className} ${
-        isActive
+        isSelected
+          ? selectedClasses
+          : isActive
           ? "border-luxe-or ring-1 ring-luxe-or/50"
           : `border-luxe-or-muted/30${disableActiveHighlight ? "" : " active:border-luxe-or/50"}`
       }`}
@@ -120,6 +134,15 @@ const ThumbButtonUrl = memo(function ThumbButtonUrl({
         sizes={flexible ? "33vw" : `${THUMB_W_PX}px`}
         unoptimized={thumbSrc.startsWith("blob:")}
       />
+      {isSelected && (
+        <span
+          className={`absolute left-1 top-1 z-10 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] font-semibold text-black ${
+            selectedTone === "or" ? "bg-amber-400" : "bg-blue-400"
+          }`}
+        >
+          {selectedRank ?? ""}
+        </span>
+      )}
     </button>
   );
 });
@@ -148,17 +171,13 @@ export function ViewerHD({ vetement = null, bloc = null, section }: ViewerHDProp
     setSelectionFor,
     selectedOr,
     selectedBleu,
-    selectImageAsOr,
-    addSelectedBleu,
-    removeLastSelection,
+    toggleVestesSelection,
     validateSelection,
     selectedChaussures,
-    addChaussure,
-    removeLastChaussure,
+    toggleChaussure,
     validateChaussures,
     selectedAccessoires,
-    addAccessoire,
-    removeLastAccessoire,
+    toggleAccessoire,
     validateAccessoires,
   } = useDossierStore();
 
@@ -208,23 +227,19 @@ export function ViewerHD({ vetement = null, bloc = null, section }: ViewerHDProp
   const handleSelectImage = (index: number) => {
     if (!isSelectionModeVestes || !bloc || !displayUrls[index]) return;
     const item = buildBlocItem(index)!;
-    if (!selectedOr) {
-      selectImageAsOr(item);
-    } else if (selectedBleu.length < MAX_BLEU) {
-      addSelectedBleu(item);
-    }
+    toggleVestesSelection(item);
   };
 
   const handleSelectImageChaussures = (index: number) => {
-    if (!isSelectionModeChaussures || selectedChaussures.length >= MAX_CHAUSSURES) return;
+    if (!isSelectionModeChaussures) return;
     const item = buildBlocItem(index);
-    if (item) addChaussure(item);
+    if (item) toggleChaussure(item);
   };
 
   const handleSelectImageAccessoires = (index: number) => {
-    if (!isSelectionModeAccessoires || selectedAccessoires.length >= MAX_ACCESSOIRES) return;
+    if (!isSelectionModeAccessoires) return;
     const item = buildBlocItem(index);
-    if (item) addAccessoire(item);
+    if (item) toggleAccessoire(item);
   };
 
   const handleValidateSelection = () => {
@@ -247,6 +262,22 @@ export function ViewerHD({ vetement = null, bloc = null, section }: ViewerHDProp
     else if (isSelectionModeChaussures) handleSelectImageChaussures(index);
     else if (isSelectionModeAccessoires) handleSelectImageAccessoires(index);
     else setActiveIndex(index);
+  };
+
+  const getSelectionMetaForIndex = (index: number): { tone: "or" | "bleu"; order: number } | null => {
+    if (!isSelectionModeVestes || !bloc || !displayUrls[index]) return null;
+    const item = buildBlocItem(index);
+    if (!item) return null;
+    if (selectedOr && selectedOr.blockId === item.blockId && selectedOr.imageUrl === item.imageUrl) {
+      return { tone: "or", order: 0 };
+    }
+    const bleuIndex = selectedBleu.findIndex(
+      (b) => b.blockId === item.blockId && b.imageUrl === item.imageUrl
+    );
+    if (bleuIndex !== -1) {
+      return { tone: "bleu", order: bleuIndex };
+    }
+    return null;
   };
 
   const getGridContent = () => (
@@ -386,10 +417,15 @@ export function ViewerHD({ vetement = null, bloc = null, section }: ViewerHDProp
       </div>
 
       {isSelectionModeVestes && (
-        <div className="mt-4 flex flex-wrap items-center gap-4 rounded-lg border border-amber-500/50 bg-amber-500/10 px-4 py-3">
-          <span className="text-sm font-medium text-amber-400">
-            Mode sélection — Image de base (OR) : {selectedOr ? "1/1" : "0/1"} • Comparaisons (BLEU) : {selectedBleu.length}/{MAX_BLEU}
-          </span>
+        <div className="mt-4 flex flex-col gap-2 rounded-lg border border-amber-500/50 bg-amber-500/10 px-4 py-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
+          <div className="min-w-0 flex-1 space-y-1">
+            <span className="text-sm font-medium text-amber-400">
+              Mode sélection — Image de base (OR) : {selectedOr ? "1/1" : "0/1"} • Comparaisons (BLEU) : {selectedBleu.length}/{MAX_BLEU}
+            </span>
+            <p className="text-xs text-amber-200/80">
+              Recliquer une image sélectionnée la retire. Pour retirer l’OR, retirez d’abord toutes les BLEU.
+            </p>
+          </div>
           <div className="flex flex-wrap gap-2">
             {selectedOr && (
               <button
@@ -400,13 +436,6 @@ export function ViewerHD({ vetement = null, bloc = null, section }: ViewerHDProp
                 Valider la sélection
               </button>
             )}
-            <button
-              type="button"
-              onClick={removeLastSelection}
-              className="rounded border border-luxe-blanc-muted/50 bg-luxe-noir-soft px-3 py-1.5 text-sm text-luxe-blanc-muted transition-colors hover:bg-white/10 touch-manipulation"
-            >
-              Annuler dernière sélection
-            </button>
             <button
               type="button"
               onClick={() => {
@@ -436,13 +465,6 @@ export function ViewerHD({ vetement = null, bloc = null, section }: ViewerHDProp
             </button>
             <button
               type="button"
-              onClick={removeLastChaussure}
-              className="rounded border border-luxe-blanc-muted/50 bg-luxe-noir-soft px-3 py-1.5 text-sm text-luxe-blanc-muted transition-colors hover:bg-white/10 touch-manipulation"
-            >
-              Annuler dernière sélection
-            </button>
-            <button
-              type="button"
               onClick={() => {
                 setSelectionFor(null);
                 router.push(ROUTES.MESURES);
@@ -467,13 +489,6 @@ export function ViewerHD({ vetement = null, bloc = null, section }: ViewerHDProp
               className="rounded border border-luxe-or/70 bg-luxe-or/20 px-3 py-1.5 text-sm font-medium text-luxe-or transition-colors hover:bg-luxe-or/30 touch-manipulation"
             >
               Valider la sélection
-            </button>
-            <button
-              type="button"
-              onClick={removeLastAccessoire}
-              className="rounded border border-luxe-blanc-muted/50 bg-luxe-noir-soft px-3 py-1.5 text-sm text-luxe-blanc-muted transition-colors hover:bg-white/10 touch-manipulation"
-            >
-              Annuler dernière sélection
             </button>
             <button
               type="button"
@@ -516,7 +531,15 @@ export function ViewerHD({ vetement = null, bloc = null, section }: ViewerHDProp
               >
                 {/* Image principale : 3 colonnes, 2 lignes */}
                 <div
-                  className="relative col-span-3 row-span-2 overflow-hidden rounded border border-luxe-or-muted/30 bg-luxe-noir-soft min-h-[280px] md:col-span-3"
+                  className={`relative col-span-3 row-span-2 overflow-hidden rounded border bg-luxe-noir-soft min-h-[280px] md:col-span-3 ${
+                    (() => {
+                      const meta = getSelectionMetaForIndex(displayIndex);
+                      if (!meta) return "border-luxe-or-muted/30";
+                      return meta.tone === "or"
+                        ? "border-[3px] border-amber-400 ring-1 ring-amber-400/70"
+                        : "border-[3px] border-blue-400 ring-1 ring-blue-400/70";
+                    })()
+                  }`}
                   style={{ gridColumn: "1 / 4", gridRow: "1 / 3" }}
                 >
                   {src ? (
@@ -543,6 +566,19 @@ export function ViewerHD({ vetement = null, bloc = null, section }: ViewerHDProp
                           />
                         )}
                       </div>
+                      {(() => {
+                        const meta = getSelectionMetaForIndex(displayIndex);
+                        if (!meta) return null;
+                        return (
+                          <span
+                            className={`pointer-events-none absolute left-2 top-2 z-10 inline-flex min-h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-xs font-semibold text-black ${
+                              meta.tone === "or" ? "bg-amber-400" : "bg-blue-400"
+                            }`}
+                          >
+                            {meta.tone === "or" ? 1 : meta.order + 2}
+                          </span>
+                        );
+                      })()}
                       <div className="absolute right-2 top-2 z-10 flex flex-col gap-0.5 rounded border border-luxe-or-muted/40 bg-luxe-noir/90 p-1">
                         <button
                           type="button"
@@ -567,47 +603,87 @@ export function ViewerHD({ vetement = null, bloc = null, section }: ViewerHDProp
                 {/* À droite : image de gauche (0) + suivantes — 2 vignettes en petit, 6 (3 colonnes) en md+ */}
                 {displayUrls[0] != null && (
                   <div className="relative aspect-[3/4] min-h-[96px] col-start-4 row-start-1">
+                    {(() => {
+                      const meta = getSelectionMetaForIndex(0);
+                      return (
                     <ThumbButtonUrl
                       url={displayUrls[0]}
                       isActive={activeIndex === 0}
+                      isSelected={Boolean(meta)}
+                      selectedTone={meta?.tone ?? null}
+                      selectedRank={
+                        meta ? (meta.tone === "or" ? 1 : (meta.order + 2)) : null
+                      }
                       onClick={() => handleThumbClick(0)}
                       flexible
                       className="w-full h-full"
                       disableActiveHighlight={isTouchDevice}
                     />
+                      );
+                    })()}
                   </div>
                 )}
                 {displayUrls[1] != null && (
                   <div className="relative aspect-[3/4] min-h-[96px] col-start-4 row-start-2">
+                    {(() => {
+                      const meta = getSelectionMetaForIndex(1);
+                      return (
                     <ThumbButtonUrl
                       url={displayUrls[1]}
                       isActive={activeIndex === 1}
+                      isSelected={Boolean(meta)}
+                      selectedTone={meta?.tone ?? null}
+                      selectedRank={
+                        meta ? (meta.tone === "or" ? 1 : (meta.order + 2)) : null
+                      }
                       onClick={() => handleThumbClick(1)}
                       flexible
                       className="w-full h-full"
                       disableActiveHighlight={isTouchDevice}
                     />
+                      );
+                    })()}
                   </div>
                 )}
                 {/* Thumbs 2–5 : en bas (4-col) ou colonnes 5–6 (6-col md+) */}
                 {displayUrls[2] != null && (
                   <div className="relative aspect-[3/4] min-h-[96px] col-start-1 row-start-3 md:col-start-5 md:row-start-1">
-                    <ThumbButtonUrl url={displayUrls[2]} isActive={activeIndex === 2} onClick={() => handleThumbClick(2)} flexible className="w-full h-full" disableActiveHighlight={isTouchDevice} />
+                    {(() => {
+                      const meta = getSelectionMetaForIndex(2);
+                      return (
+                        <ThumbButtonUrl url={displayUrls[2]} isActive={activeIndex === 2} isSelected={Boolean(meta)} selectedTone={meta?.tone ?? null} selectedRank={meta ? (meta.tone === "or" ? 1 : (meta.order + 2)) : null} onClick={() => handleThumbClick(2)} flexible className="w-full h-full" disableActiveHighlight={isTouchDevice} />
+                      );
+                    })()}
                   </div>
                 )}
                 {displayUrls[3] != null && (
                   <div className="relative aspect-[3/4] min-h-[96px] col-start-2 row-start-3 md:col-start-5 md:row-start-2">
-                    <ThumbButtonUrl url={displayUrls[3]} isActive={activeIndex === 3} onClick={() => handleThumbClick(3)} flexible className="w-full h-full" disableActiveHighlight={isTouchDevice} />
+                    {(() => {
+                      const meta = getSelectionMetaForIndex(3);
+                      return (
+                        <ThumbButtonUrl url={displayUrls[3]} isActive={activeIndex === 3} isSelected={Boolean(meta)} selectedTone={meta?.tone ?? null} selectedRank={meta ? (meta.tone === "or" ? 1 : (meta.order + 2)) : null} onClick={() => handleThumbClick(3)} flexible className="w-full h-full" disableActiveHighlight={isTouchDevice} />
+                      );
+                    })()}
                   </div>
                 )}
                 {displayUrls[4] != null && (
                   <div className="relative aspect-[3/4] min-h-[96px] col-start-3 row-start-3 md:col-start-6 md:row-start-1">
-                    <ThumbButtonUrl url={displayUrls[4]} isActive={activeIndex === 4} onClick={() => handleThumbClick(4)} flexible className="w-full h-full" disableActiveHighlight={isTouchDevice} />
+                    {(() => {
+                      const meta = getSelectionMetaForIndex(4);
+                      return (
+                        <ThumbButtonUrl url={displayUrls[4]} isActive={activeIndex === 4} isSelected={Boolean(meta)} selectedTone={meta?.tone ?? null} selectedRank={meta ? (meta.tone === "or" ? 1 : (meta.order + 2)) : null} onClick={() => handleThumbClick(4)} flexible className="w-full h-full" disableActiveHighlight={isTouchDevice} />
+                      );
+                    })()}
                   </div>
                 )}
                 {displayUrls[5] != null && (
                   <div className="relative aspect-[3/4] min-h-[96px] col-start-4 row-start-3 md:col-start-6 md:row-start-2">
-                    <ThumbButtonUrl url={displayUrls[5]} isActive={activeIndex === 5} onClick={() => handleThumbClick(5)} flexible className="w-full h-full" disableActiveHighlight={isTouchDevice} />
+                    {(() => {
+                      const meta = getSelectionMetaForIndex(5);
+                      return (
+                        <ThumbButtonUrl url={displayUrls[5]} isActive={activeIndex === 5} isSelected={Boolean(meta)} selectedTone={meta?.tone ?? null} selectedRank={meta ? (meta.tone === "or" ? 1 : (meta.order + 2)) : null} onClick={() => handleThumbClick(5)} flexible className="w-full h-full" disableActiveHighlight={isTouchDevice} />
+                      );
+                    })()}
                   </div>
                 )}
                 {/* Overflow : à partir de l'index 6, 4 par ligne en petit, 6 par ligne en md+ */}
@@ -624,6 +700,14 @@ export function ViewerHD({ vetement = null, bloc = null, section }: ViewerHDProp
                       <ThumbButtonUrl
                         url={displayUrls[i]}
                         isActive={activeIndex === i}
+                        isSelected={Boolean(getSelectionMetaForIndex(i))}
+                        selectedTone={getSelectionMetaForIndex(i)?.tone ?? null}
+                        selectedRank={
+                          (() => {
+                            const meta = getSelectionMetaForIndex(i);
+                            return meta ? (meta.tone === "or" ? 1 : (meta.order + 2)) : null;
+                          })()
+                        }
                         onClick={() => handleThumbClick(i)}
                         flexible
                         className="w-full h-full"
