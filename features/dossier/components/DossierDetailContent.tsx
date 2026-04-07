@@ -11,6 +11,7 @@ import type { DossierEnregistre } from "../store";
 import { fetchDossierById } from "../api/dossiers-history";
 import { GROUPES_MESURES } from "../constants/mesures";
 import type { AnnotationShape } from "../types";
+import { digitsOnly, formatNationalDisplay } from "../utils/phone-format";
 import { PersonPhotoPlaceholder } from "./PersonPhotoPlaceholder";
 
 type LightboxState =
@@ -302,7 +303,7 @@ function DossierView({ dossier }: { dossier: DossierEnregistre }) {
           {(dossier.dateDepot ?? dossier.createdAt) && (
             <div>
               <dt className="text-luxe-blanc-muted">Date de dépôt</dt>
-              <dd className="text-luxe-blanc">
+              <dd className="text-luxe-blanc font-dossier-nombres">
                 {formatDate(dossier.dateDepot ?? dossier.createdAt)}
               </dd>
             </div>
@@ -310,24 +311,30 @@ function DossierView({ dossier }: { dossier: DossierEnregistre }) {
           {dossier.dateLivraison && (
             <div>
               <dt className="text-luxe-blanc-muted">Date de livraison</dt>
-              <dd className="text-luxe-blanc">
+              <dd className="text-luxe-blanc font-dossier-nombres">
                 {formatDate(dossier.dateLivraison)}
               </dd>
             </div>
           )}
           <div>
             <dt className="text-luxe-blanc-muted">Contact 1</dt>
-            <dd className="text-luxe-blanc">
+            <dd className="text-luxe-blanc font-dossier-nombres">
               {dossier.contact1 != null && dossier.contact1 !== ""
-                ? `${dossier.contact1Prefix ?? ""} ${dossier.contact1}`.trim()
+                ? `${dossier.contact1Prefix ?? ""} ${formatNationalDisplay(
+                    digitsOnly(dossier.contact1),
+                    dossier.contact1Prefix ?? "+242"
+                  )}`.trim()
                 : dossier.contact ?? "—"}
             </dd>
           </div>
           {(dossier.contact2 ?? "").trim() && (
             <div>
               <dt className="text-luxe-blanc-muted">Contact 2</dt>
-              <dd className="text-luxe-blanc">
-                {`${dossier.contact2Prefix ?? ""} ${dossier.contact2}`.trim()}
+              <dd className="text-luxe-blanc font-dossier-nombres">
+                {`${dossier.contact2Prefix ?? ""} ${formatNationalDisplay(
+                  digitsOnly(dossier.contact2 ?? ""),
+                  dossier.contact2Prefix ?? "+242"
+                )}`.trim()}
               </dd>
             </div>
           )}
@@ -410,7 +417,7 @@ function DossierView({ dossier }: { dossier: DossierEnregistre }) {
                 {groupe.mesures.map((m) => (
                   <div key={m.id} className="flex justify-between gap-2">
                     <dt className="text-luxe-blanc-muted">{m.label}</dt>
-                    <dd className="text-luxe-blanc">
+                    <dd className="text-luxe-blanc font-dossier-nombres">
                       {mesures[m.id] != null ? String(mesures[m.id]) : "—"}
                     </dd>
                   </div>

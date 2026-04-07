@@ -4,6 +4,8 @@ import { Input, Select } from "@/shared/ui";
 import { isValidEmail } from "@/shared/utils/email";
 import { useDossierForm } from "../hooks";
 import { COUNTRY_PHONE_CODES, DEFAULT_COUNTRY_CODE } from "../constants/country-codes";
+import { digitsOnly, getNationalMaxDigits } from "../utils/phone-format";
+import { NationalPhoneField } from "./NationalPhoneField";
 
 const countryOptions = COUNTRY_PHONE_CODES.map((c) => ({
   value: c.code,
@@ -45,21 +47,24 @@ export function FormulaireDossier() {
           <Select
             options={countryOptions}
             value={dossier.contact1Prefix ?? DEFAULT_COUNTRY_CODE}
-            onChange={(e) =>
-              setDossier({ contact1Prefix: e.target.value })
-            }
+            onChange={(e) => {
+              const p = e.target.value;
+              const cur = digitsOnly(dossier.contact1 ?? "");
+              const max = getNationalMaxDigits(p);
+              setDossier({
+                contact1Prefix: p,
+                contact1: cur.slice(0, max),
+              });
+            }}
             className="min-w-[140px] shrink-0"
             aria-label="Indicatif pays contact 1"
           />
-          <input
+          <NationalPhoneField
             name="contact1"
-            type="tel"
-            value={dossier.contact1 ?? ""}
-            onChange={(e) => setDossier({ contact1: e.target.value })}
-            placeholder="06 123 45 67"
-            autoComplete="tel"
-            className="input-luxe w-full min-w-0 rounded border border-luxe-or-muted/40 bg-luxe-noir px-3 py-2 text-luxe-blanc placeholder:text-luxe-blanc-muted focus:border-luxe-or focus:outline-none"
-            aria-label="Numéro contact 1"
+            prefix={dossier.contact1Prefix ?? DEFAULT_COUNTRY_CODE}
+            value={digitsOnly(dossier.contact1 ?? "")}
+            onChange={(d) => setDossier({ contact1: d })}
+            aria-label="Numéro contact 1 (indicatif inclus)"
           />
         </div>
       </div>
@@ -72,21 +77,25 @@ export function FormulaireDossier() {
           <Select
             options={countryOptions}
             value={dossier.contact2Prefix ?? DEFAULT_COUNTRY_CODE}
-            onChange={(e) =>
-              setDossier({ contact2Prefix: e.target.value })
-            }
+            onChange={(e) => {
+              const p = e.target.value;
+              const cur = digitsOnly(dossier.contact2 ?? "");
+              const max = getNationalMaxDigits(p);
+              setDossier({
+                contact2Prefix: p,
+                contact2: cur.slice(0, max),
+              });
+            }}
             className="min-w-[140px] shrink-0"
             aria-label="Indicatif pays contact 2"
           />
-          <input
+          <NationalPhoneField
             name="contact2"
-            type="tel"
-            value={dossier.contact2 ?? ""}
-            onChange={(e) => setDossier({ contact2: e.target.value })}
-            placeholder="Optionnel"
-            autoComplete="tel"
-            className="input-luxe w-full min-w-0 rounded border border-luxe-or-muted/40 bg-luxe-noir px-3 py-2 text-luxe-blanc placeholder:text-luxe-blanc-muted focus:border-luxe-or focus:outline-none"
-            aria-label="Numéro contact 2"
+            prefix={dossier.contact2Prefix ?? DEFAULT_COUNTRY_CODE}
+            value={digitsOnly(dossier.contact2 ?? "")}
+            onChange={(d) => setDossier({ contact2: d })}
+            optional
+            aria-label="Numéro contact 2 (indicatif inclus)"
           />
         </div>
       </div>

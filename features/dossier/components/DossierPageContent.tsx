@@ -6,6 +6,7 @@ import { ROUTES } from "@/shared/constants";
 import { Button } from "@/shared/ui";
 import { useAuthStore } from "@/features/auth/store";
 import { FormulaireDossier, CapturePhoto } from "./index";
+import { DeliveryDateField } from "./DeliveryDateField";
 import { useDossierStore } from "../store";
 import { isDossierStepValid } from "../services";
 
@@ -36,10 +37,6 @@ export function DossierPageContent() {
       <h1 className="font-serif text-3xl font-semibold text-luxe-blanc">
         Création du Dossier Client
       </h1>
-      <p className="mt-2 text-luxe-blanc-muted">
-        Saisissez les informations et les photos de référence pour le tailleur
-        (carnation, posture).
-      </p>
 
       <section className="mt-10">
         <div className="mb-4 grid gap-4 sm:grid-cols-2">
@@ -58,18 +55,7 @@ export function DossierPageContent() {
             >
               Date de livraison
             </label>
-            <input
-              id="date-livraison"
-              name="dateLivraison"
-              type="date"
-              value={dossier.dateLivraison ?? ""}
-              onChange={(e) =>
-                useDossierStore.getState().setDossier({
-                  dateLivraison: e.target.value,
-                })
-              }
-              className="input-luxe w-full rounded border border-luxe-or-muted/40 bg-luxe-noir px-3 py-2 text-luxe-blanc focus:border-luxe-or focus:outline-none"
-            />
+            <DeliveryDateField />
           </div>
         </div>
         <h2 className="font-serif text-xl font-medium text-luxe-or">

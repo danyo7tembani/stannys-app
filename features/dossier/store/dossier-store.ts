@@ -26,6 +26,11 @@ interface DossierState {
   selectImageAsOr: (item: ImageChoixModele) => void;
   /** Ajouter comme image de comparaison (BLEU). Max 3. */
   addSelectedBleu: (item: ImageChoixModele) => void;
+  /**
+   * Clic sur une vignette en mode vestes : ajoute si nouvelle, retire si BLEU.
+   * L’OR ne peut être retirée que lorsqu’il n’y a plus de BLEU (règle ancre).
+   */
+  toggleVestesSelection: (item: ImageChoixModele) => void;
   /** Annuler la dernière sélection (BLEU puis OR). */
   removeLastSelection: () => void;
   /** Réinitialiser la sélection en cours (OR + BLEU). */
@@ -36,12 +41,15 @@ interface DossierState {
   selectedChaussures: ImageChoixModele[];
   setSelectedChaussures: (items: ImageChoixModele[]) => void;
   addChaussure: (item: ImageChoixModele) => void;
+  /** Retire une image si déjà sélectionnée, sinon l’ajoute. */
+  toggleChaussure: (item: ImageChoixModele) => void;
   removeLastChaussure: () => void;
   validateChaussures: () => void;
   /** Choix d'accessoires : 0 à 15 images */
   selectedAccessoires: ImageChoixModele[];
   setSelectedAccessoires: (items: ImageChoixModele[]) => void;
   addAccessoire: (item: ImageChoixModele) => void;
+  toggleAccessoire: (item: ImageChoixModele) => void;
   removeLastAccessoire: () => void;
   validateAccessoires: () => void;
 }
@@ -104,6 +112,26 @@ export const useDossierStore = create<DossierState>((set, get) => ({
       return { selectedBleu: [...s.selectedBleu, item] };
     }),
 
+  toggleVestesSelection: (item) =>
+    set((s) => {
+      if (s.selectedOr && sameImage(s.selectedOr, item)) {
+        if (s.selectedBleu.length > 0) return s;
+        return { selectedOr: null };
+      }
+      const bleuIdx = s.selectedBleu.findIndex((b) => sameImage(b, item));
+      if (bleuIdx !== -1) {
+        return {
+          selectedBleu: s.selectedBleu.filter((_, i) => i !== bleuIdx),
+        };
+      }
+      if (!s.selectedOr) {
+        return { selectedOr: item, selectedBleu: [] };
+      }
+      if (s.selectedBleu.length >= MAX_BLEU) return s;
+      if (s.selectedBleu.some((b) => sameImage(b, item))) return s;
+      return { selectedBleu: [...s.selectedBleu, item] };
+    }),
+
   removeLastSelection: () =>
     set((s) => {
       if (s.selectedBleu.length > 0)
@@ -142,6 +170,17 @@ export const useDossierStore = create<DossierState>((set, get) => ({
       if (s.selectedChaussures.some((c) => sameImage(c, item))) return s;
       return { selectedChaussures: [...s.selectedChaussures, item] };
     }),
+  toggleChaussure: (item) =>
+    set((s) => {
+      const idx = s.selectedChaussures.findIndex((c) => sameImage(c, item));
+      if (idx !== -1) {
+        return {
+          selectedChaussures: s.selectedChaussures.filter((_, i) => i !== idx),
+        };
+      }
+      if (s.selectedChaussures.length >= MAX_CHAUSSURES) return s;
+      return { selectedChaussures: [...s.selectedChaussures, item] };
+    }),
   removeLastChaussure: () =>
     set((s) => ({
       selectedChaussures:
@@ -174,6 +213,17 @@ export const useDossierStore = create<DossierState>((set, get) => ({
     set((s) => {
       if (s.selectedAccessoires.length >= MAX_ACCESSOIRES) return s;
       if (s.selectedAccessoires.some((a) => sameImage(a, item))) return s;
+      return { selectedAccessoires: [...s.selectedAccessoires, item] };
+    }),
+  toggleAccessoire: (item) =>
+    set((s) => {
+      const idx = s.selectedAccessoires.findIndex((a) => sameImage(a, item));
+      if (idx !== -1) {
+        return {
+          selectedAccessoires: s.selectedAccessoires.filter((_, i) => i !== idx),
+        };
+      }
+      if (s.selectedAccessoires.length >= MAX_ACCESSOIRES) return s;
       return { selectedAccessoires: [...s.selectedAccessoires, item] };
     }),
   removeLastAccessoire: () =>
