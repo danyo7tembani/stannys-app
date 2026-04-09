@@ -263,6 +263,15 @@ export function MurDeStyle({ section, vetements }: MurDeStyleProps) {
   const canEdit = canEditCatalogue(role);
   const showSkeleton = isListLoading && list.length === 0;
 
+  useEffect(() => {
+    if (isListLoading) return;
+    window.dispatchEvent(
+      new CustomEvent("catalogue-section-ready", {
+        detail: { section },
+      })
+    );
+  }, [isListLoading, section]);
+
   return (
     <div className="flex min-h-[calc(100vh-4rem)] w-full flex-col items-center justify-center py-4">
       {canEdit && (

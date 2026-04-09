@@ -110,6 +110,16 @@ export function NavMain() {
   }, [pathname, showBurgerMenu]);
 
   useEffect(() => {
+    if (role === "atelier") {
+      router.prefetch(ROUTES.DOSSIERS_ATELIER);
+      return;
+    }
+    router.prefetch(ROUTES.DOSSIER);
+    router.prefetch(ROUTES.PARAMETRES);
+    CATALOGUE_SECTIONS.forEach((section) => router.prefetch(ROUTES.CATALOGUE_SECTION(section)));
+  }, [router, role]);
+
+  useEffect(() => {
     if (!menuOpen) return;
 
     const onPointerDown = (event: PointerEvent) => {

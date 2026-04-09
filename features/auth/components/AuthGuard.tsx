@@ -13,6 +13,7 @@ import { ParametresSplash } from "./ParametresSplash";
 import { VestesSplash } from "./VestesSplash";
 import { ChaussuresSplash } from "./ChaussuresSplash";
 import { AccessoiresSplash } from "./AccessoiresSplash";
+import type { CatalogueSection } from "@/shared/constants";
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -39,6 +40,22 @@ export function AuthGuard({ children }: AuthGuardProps) {
   const setShowChaussuresSplash = useAuthStore((s) => s.setShowChaussuresSplash);
   const showAccessoiresSplash = useAuthStore((s) => s.showAccessoiresSplash);
   const setShowAccessoiresSplash = useAuthStore((s) => s.setShowAccessoiresSplash);
+
+  const getSectionFromPathname = (path: string): CatalogueSection | null => {
+    if (path === ROUTES.CATALOGUE_SECTION("vestes") || path.startsWith(`${ROUTES.CATALOGUE_SECTION("vestes")}/`))
+      return "vestes";
+    if (
+      path === ROUTES.CATALOGUE_SECTION("chaussures") ||
+      path.startsWith(`${ROUTES.CATALOGUE_SECTION("chaussures")}/`)
+    )
+      return "chaussures";
+    if (
+      path === ROUTES.CATALOGUE_SECTION("accessoires") ||
+      path.startsWith(`${ROUTES.CATALOGUE_SECTION("accessoires")}/`)
+    )
+      return "accessoires";
+    return null;
+  };
 
   const logoutAndRedirect = () => {
     logout();
@@ -71,46 +88,67 @@ export function AuthGuard({ children }: AuthGuardProps) {
   }, [mounted, pathname, isAuthenticated, role, logout, router]);
 
   useEffect(() => {
-    if (!showPostLoginSplash) return;
-    const t = setTimeout(() => setShowPostLoginSplash(false), 2000);
-    return () => clearTimeout(t);
-  }, [showPostLoginSplash, setShowPostLoginSplash]);
+    if (showPostLoginSplash && pathname !== ROUTES.LOGIN && isAuthenticated) {
+      setShowPostLoginSplash(false);
+    }
+    if (showMesureSplash && (pathname === ROUTES.DOSSIER || pathname === ROUTES.MESURES)) {
+      setShowMesureSplash(false);
+    }
+    if (showParametresSplash && pathname.startsWith(ROUTES.PARAMETRES)) {
+      setShowParametresSplash(false);
+    }
+    if (showBlockViewerSplash && /^\/catalogue\/[^/]+\/[^/]+/.test(pathname)) {
+      setShowBlockViewerSplash(false);
+    }
+  }, [
+    pathname,
+    isAuthenticated,
+    showPostLoginSplash,
+    showMesureSplash,
+    showParametresSplash,
+    showBlockViewerSplash,
+    setShowPostLoginSplash,
+    setShowMesureSplash,
+    setShowParametresSplash,
+    setShowBlockViewerSplash,
+  ]);
 
   useEffect(() => {
-    if (!showBlockViewerSplash) return;
-    const t = setTimeout(() => setShowBlockViewerSplash(false), 1000);
-    return () => clearTimeout(t);
-  }, [showBlockViewerSplash, setShowBlockViewerSplash]);
+    const pathnameSection = getSectionFromPathname(pathname);
+    if (pathnameSection !== "vestes" && showVestesSplash) setShowVestesSplash(false);
+    if (pathnameSection !== "chaussures" && showChaussuresSplash) setShowChaussuresSplash(false);
+    if (pathnameSection !== "accessoires" && showAccessoiresSplash) setShowAccessoiresSplash(false);
+  }, [
+    pathname,
+    showVestesSplash,
+    showChaussuresSplash,
+    showAccessoiresSplash,
+    setShowVestesSplash,
+    setShowChaussuresSplash,
+    setShowAccessoiresSplash,
+  ]);
 
   useEffect(() => {
-    if (!showMesureSplash) return;
-    const t = setTimeout(() => setShowMesureSplash(false), 1000);
-    return () => clearTimeout(t);
-  }, [showMesureSplash, setShowMesureSplash]);
-
-  useEffect(() => {
-    if (!showParametresSplash) return;
-    const t = setTimeout(() => setShowParametresSplash(false), 1000);
-    return () => clearTimeout(t);
-  }, [showParametresSplash, setShowParametresSplash]);
-
-  useEffect(() => {
-    if (!showVestesSplash) return;
-    const t = setTimeout(() => setShowVestesSplash(false), 1000);
-    return () => clearTimeout(t);
-  }, [showVestesSplash, setShowVestesSplash]);
-
-  useEffect(() => {
-    if (!showChaussuresSplash) return;
-    const t = setTimeout(() => setShowChaussuresSplash(false), 1000);
-    return () => clearTimeout(t);
-  }, [showChaussuresSplash, setShowChaussuresSplash]);
-
-  useEffect(() => {
-    if (!showAccessoiresSplash) return;
-    const t = setTimeout(() => setShowAccessoiresSplash(false), 1000);
-    return () => clearTimeout(t);
-  }, [showAccessoiresSplash, setShowAccessoiresSplash]);
+    const onCatalogueSectionReady = (event: Event) => {
+      const detail = (event as CustomEvent<{ section?: string }>).detail;
+      const section = detail?.section;
+      if (!section) return;
+      if (pathname !== ROUTES.CATALOGUE_SECTION(section)) return;
+      if (section === "vestes" && showVestesSplash) setShowVestesSplash(false);
+      if (section === "chaussures" && showChaussuresSplash) setShowChaussuresSplash(false);
+      if (section === "accessoires" && showAccessoiresSplash) setShowAccessoiresSplash(false);
+    };
+    window.addEventListener("catalogue-section-ready", onCatalogueSectionReady);
+    return () => window.removeEventListener("catalogue-section-ready", onCatalogueSectionReady);
+  }, [
+    pathname,
+    showVestesSplash,
+    showChaussuresSplash,
+    showAccessoiresSplash,
+    setShowVestesSplash,
+    setShowChaussuresSplash,
+    setShowAccessoiresSplash,
+  ]);
 
   if (!mounted) {
     return (
