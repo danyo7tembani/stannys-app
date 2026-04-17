@@ -11,9 +11,9 @@ export function AuthPortal() {
         <Image
           src="/logo.png"
           alt="Stanny's"
-          width={160}
-          height={80}
-          className="h-20 w-auto object-contain mb-6"
+          width={384}
+          height={192}
+          className="h-48 w-auto object-contain mb-6"
         />
         <h1 className="font-serif text-2xl font-semibold text-luxe-blanc text-center mt-2 mb-8">
           Authentification

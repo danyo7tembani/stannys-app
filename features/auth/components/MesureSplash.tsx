@@ -15,9 +15,9 @@ export function MesureSplash() {
       <Image
         src="/logo.png"
         alt=""
-        width={200}
-        height={100}
-        className="h-24 w-auto object-contain"
+        width={448}
+        height={224}
+        className="h-56 w-auto object-contain"
         style={{
           animation: "loading-zoom 1s ease-in-out 1 forwards",
         }}

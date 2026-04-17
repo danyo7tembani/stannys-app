@@ -143,12 +143,12 @@ export function NavMain() {
 
   return (
     <nav className="sticky top-0 z-50 border-b border-luxe-or-muted/30 bg-luxe-noir/95 backdrop-blur-sm print:hidden">
-      <div className="relative mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 min-h-[3rem]">
+      <div className="relative mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 min-h-[3rem]">
         <Link href={ROUTES.HOME} className="brand-luxe touch-manipulation py-2 min-h-[44px] inline-flex items-center">
           <img
             src="/logo.png"
             alt="Stanny's"
-            className="h-10 w-auto object-contain"
+            className="h-16 w-auto object-contain"
           />
         </Link>
         <div
