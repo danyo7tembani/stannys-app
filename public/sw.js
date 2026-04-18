@@ -1,4 +1,4 @@
-const CACHE_NAME = "stannys-shell-v1";
+const CACHE_NAME = "stannys-shell-v2";
 const SHELL_URLS = ["/", "/manifest.webmanifest", "/icon.svg", "/logo.png"];
 
 self.addEventListener("install", (event) => {
